@@ -1,0 +1,10 @@
+# For frontend (React)
+node_modules/
+dist/
+build/
+
+# For backend (.NET Core)
+bin/
+obj/
+.vscode/
+.env

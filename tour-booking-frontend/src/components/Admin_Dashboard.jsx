@@ -1,0 +1,82 @@
+import React, { useEffect, useState } from "react";
+import { Container, Row, Col, Spinner, Alert, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+
+const Admin_Dashboard = () => {
+  const [upcomingCount, setUpcomingCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUpcoming = async () => {
+      try {
+        const res = await fetch("https://localhost:7040/api/Bookings/Upcoming");
+        if (!res.ok) throw new Error("Failed to fetch bookings");
+        const data = await res.json();
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const upcoming = data.filter((booking) => {
+          const isValid = booking.customerName && booking.customerName.toLowerCase() !== "string";
+          const startDate = new Date(booking.startDate);
+          startDate.setHours(0, 0, 0, 0);
+          return isValid && startDate >= today;
+        });
+
+        setUpcomingCount(upcoming.length);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUpcoming();
+  }, []);
+
+  return (
+    <Container className="mt-5 p-4 border rounded shadow bg-light">
+      <h2 className="text-center mb-4 text-primary">📊 Admin Dashboard</h2>
+      <Row className="g-4">
+        <Col md={6}>
+          <div className="p-3 border rounded bg-white">
+            <h5>Upcoming Tours</h5>
+            {loading ? (
+              <Spinner animation="border" />
+            ) : error ? (
+              <Alert variant="danger">{error}</Alert>
+            ) : (
+              <>
+                <p>{upcomingCount} tours scheduled.</p>
+                <Button variant="primary" onClick={() => navigate("/admin/upcoming-tours")}>View Upcoming Tours</Button>
+              </>
+            )}
+          </div>
+        </Col>
+        <Col md={6}>
+          <div className="p-3 border rounded bg-white">
+            <h5>Bus Allocation</h5>
+            <p>Assign buses to tours & view availability by date.</p>
+          </div>
+        </Col>
+        <Col md={12}>
+          <div className="p-3 border rounded bg-white">
+            <h5>Trip Accounts</h5>
+            <p>Track income vs expenses (diesel, driver, etc.) and calculate profits.</p>
+          </div>
+        </Col>
+        <Col md={12}>
+          <div className="p-3 border rounded bg-white">
+            <h5>Booking</h5>
+            <p>Navigate to book a new tour.</p>
+            <Button variant="success" onClick={() => navigate("/booking")}>+ Go to Tour Booking Form</Button>
+          </div>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+
+export default Admin_Dashboard;
