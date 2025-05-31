@@ -121,7 +121,7 @@ To include custom booking charges (rent per bus, total rent, advance, balance):
 
 ## ✍️ Author
 
-**G. Manivannan**  
+**M.Srivatsan**  
 Email: `manivannansrivatsan@gmail.com`  
 Built for: **Sri Sai Senthil Tours & Travels**
 
