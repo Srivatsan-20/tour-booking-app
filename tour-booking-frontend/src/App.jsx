@@ -9,8 +9,8 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Home route shows the admin dashboard */}
         <Route path="/" element={<Admin_Dashboard />} />
-        <Route path="/" element={<Admin_Dashboard />} /> // Make this the home
         <Route path="/admin" element={<Admin_Dashboard />} />
         <Route path="/booking" element={<BookingForm />} />
         <Route path="/admin/upcoming-tours" element={<UpcomingToursList />} />
