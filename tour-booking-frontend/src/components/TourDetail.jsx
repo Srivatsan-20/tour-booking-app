@@ -14,7 +14,7 @@ const TourDetail = () => {
   useEffect(() => {
     const fetchTour = async () => {
       try {
-        const res = await fetch(`https://localhost:7040/api/Bookings/${id}`);
+        const res = await fetch(`http://localhost:5050/api/Bookings/${id}`);
         if (!res.ok) throw new Error("Failed to fetch tour");
         const data = await res.json();
         setTour(data);

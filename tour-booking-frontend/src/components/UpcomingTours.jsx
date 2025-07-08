@@ -9,8 +9,10 @@ const Admin_Dashboard = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const res = await fetch("https://localhost:7040/api/Bookings/Upcoming");
-        if (!res.ok) throw new Error("Failed to fetch bookings");
+        console.log("Attempting to fetch from: http://localhost:5050/api/Bookings/Upcoming");
+        const res = await fetch("http://localhost:5050/api/Bookings/Upcoming");
+        console.log("Response status:", res.status);
+        if (!res.ok) throw new Error(`Failed to fetch bookings: ${res.status} ${res.statusText}`);
         const data = await res.json();
 
         const today = new Date();
@@ -25,6 +27,7 @@ const Admin_Dashboard = () => {
 
         setBookings(upcoming);
       } catch (err) {
+        console.error("Fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);

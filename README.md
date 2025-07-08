@@ -1,148 +1,174 @@
-# 🛸 Sri Sai Senthil Tour Booking App
+# Tour Booking Application
 
-A full-stack application for managing tour bookings, buses, and trip accounts built with React and ASP.NET Core.
+A full-stack tour booking application built with React frontend and .NET Core Web API backend.
 
----
+## 🚀 Quick Start
 
-## 📁 Project Structure
+### Prerequisites
 
-```
-tour-booking-app/
-🔹 tour-booking-frontend/   # React frontend (Tailwind + Bootstrap)
-🔹 tour-booking-backend/    # ASP.NET Core backend
-```
+Before running this application, make sure you have the following installed:
 
----
+- **Node.js** (v16 or higher) - [Download here](https://nodejs.org/)
+- **.NET 8 SDK** - [Download here](https://dotnet.microsoft.com/download/dotnet/8.0)
+- **SQL Server** (LocalDB or SQL Server Express) - [Download here](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)
+- **Git** - [Download here](https://git-scm.com/)
 
-## 💠 Local Setup Instructions
-
-### ⚙ Prerequisites
-
-Make sure these tools are installed:
-
-- [Node.js](https://nodejs.org/) (v18 or newer)
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) (for backend) with ASP.NET workload
-- [.NET SDK 7.0+](https://dotnet.microsoft.com/download)
-- [Git](https://git-scm.com/)
-- Optional: SQL Server (or use SQLite)
-
----
-
-## 🔄 Clone the Repository
+### 📥 Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/tour-booking-app.git
+git clone https://github.com/YOUR_USERNAME/tour-booking-app.git
 cd tour-booking-app
 ```
 
----
+## 🏗️ Project Structure
 
-## 🔷 Setup Frontend (React)
-
-```bash
-cd tour-booking-frontend
-npm install
-npm run dev
+```
+tour-booking-app/
+├── TourBookingAPI/          # Backend (.NET Core Web API)
+│   ├── TourBookingAPI/      # Main API project
+│   │   ├── Controllers/     # API controllers
+│   │   ├── Models/         # Data models
+│   │   ├── Data/           # Database context
+│   │   └── Program.cs      # Application entry point
+│   └── TourBookingAPI.sln  # Solution file
+├── tour-booking-frontend/   # Frontend (React + Vite)
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   └── App.jsx        # Main app component
+│   └── package.json       # Node.js dependencies
+└── README.md              # This file
 ```
 
-- Runs on: `http://localhost:5173`
-- API is expected at: `https://localhost:7040`
+## 🛠️ Setup Instructions
 
----
+### 1. Backend Setup (.NET API)
 
-## ⚙️ Setup Backend (ASP.NET Core)
+1. **Navigate to the API directory:**
+   ```bash
+   cd TourBookingAPI/TourBookingAPI
+   ```
 
-```bash
-cd ../tour-booking-backend
-dotnet restore
-dotnet build
-dotnet run
-```
+2. **Restore NuGet packages:**
+   ```bash
+   dotnet restore
+   ```
 
-- Runs on: `https://localhost:7040`
-- Swagger UI available at: `https://localhost:7040/swagger`
+3. **Update database connection string (if needed):**
+   - Open `appsettings.json`
+   - Modify the connection string if your SQL Server setup is different:
+   ```json
+   {
+     "ConnectionStrings": {
+       "DefaultConnection": "Server=localhost;Database=TourBookingDB;Trusted_Connection=True;TrustServerCertificate=True;"
+     }
+   }
+   ```
 
----
+4. **Create and update the database:**
+   ```bash
+   dotnet ef database update
+   ```
 
-## 🌟 Key Features
+5. **Run the API:**
+   ```bash
+   dotnet run
+   ```
 
-### Booking Form
-- Customer details
-- Tour route
-- Date validations
-- Required field checks
-- Booking success/failure alerts
+   The API will start on: `http://localhost:5050`
+   Swagger UI available at: `http://localhost:5050/swagger`
 
-### Admin Dashboard
-- 🗕 View count of upcoming tours
-- 📋 See detailed list of bookings
-- 🔍 View full details per tour
-- 📟 Export tour details as PDF (with logo, amount, balance info)
-- 🔀 Navigate between dashboard and form
+### 2. Frontend Setup (React)
 
----
+1. **Open a new terminal and navigate to frontend directory:**
+   ```bash
+   cd tour-booking-frontend
+   ```
 
-## 🖼 Logo
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-Your logo image is placed in:
-```
-tour-booking-frontend/public/logo.png
-```
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-It is used in PDF export for branding.
+   The frontend will start on: `http://localhost:5173`
 
----
+## 🌐 Application URLs
 
-## 🔪 Testing the App
+- **Frontend (React):** http://localhost:5173
+- **Backend API:** http://localhost:5050
+- **API Documentation (Swagger):** http://localhost:5050/swagger
 
-1. Open Swagger UI: `https://localhost:7040/swagger`
-2. POST a booking to `/api/Bookings`
-3. Visit `http://localhost:5173/admin` to see the dashboard
-4. Submit a booking or view existing ones
+## 📱 Features
 
----
+- **Admin Dashboard:** Overview of upcoming tours and bookings
+- **Tour Booking Form:** Create new tour bookings
+- **Upcoming Tours List:** View all scheduled tours
+- **Tour Details:** View detailed information for each booking
+- **Responsive Design:** Works on desktop and mobile devices
 
-## ✏️ Customize Booking Rates (PDF)
+## 🗄️ Database
 
-To include custom booking charges (rent per bus, total rent, advance, balance):
-- Go to: `TourDetail.jsx`
-- Adjust `generatePDF` function logic and fields
+The application uses SQL Server with Entity Framework Core. The database will be automatically created when you run `dotnet ef database update`.
 
----
+### Database Schema
 
-## 📋 Sample Admin Navigation
+- **Bookings Table:** Stores all tour booking information
+  - Customer details (name, phone)
+  - Tour dates (start, end)
+  - Locations (pickup, drop)
+  - Bus information (type, count)
+  - Passenger count and places to cover
 
-- `/` → Admin Dashboard
-- `/booking` → New Booking Form
-- `/admin/upcoming-tours` → Upcoming Bookings
-- `/admin/tour/:id` → Full Tour Detail + PDF Export
+## 🔧 Development
 
----
+### API Endpoints
 
-## ✍️ Author
+- `GET /api/Bookings/Upcoming` - Get upcoming bookings
+- `POST /api/Bookings` - Create new booking
+- `GET /api/Bookings/{id}` - Get booking by ID
 
-**M.Srivatsan**  
-Email: `manivannansrivatsan@gmail.com`  
-Built for: **Sri Sai Senthil Tours & Travels**
+### Frontend Components
 
----
+- `Admin_Dashboard.jsx` - Main dashboard
+- `BookingForm.jsx` - Tour booking form
+- `UpcomingToursList.jsx` - List of upcoming tours
+- `TourDetail.jsx` - Individual tour details
 
-## 🚀 Future Enhancements
+## 🚨 Troubleshooting
 
-- Bus availability calendar
-- Admin login (auth)
-- Trip-wise expenses breakdown
-- Payment tracking dashboard
+### Common Issues
 
----
+1. **API not starting:**
+   - Ensure SQL Server is running
+   - Check connection string in `appsettings.json`
+   - Run `dotnet ef database update`
 
-## ✅ Done Setting Up?
+2. **Frontend "Failed to fetch" errors:**
+   - Ensure API is running on port 5050
+   - Check browser console for CORS errors
 
-🔄 Commit your code:
+3. **Database connection issues:**
+   - Verify SQL Server is installed and running
+   - Update connection string for your environment
 
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/YOUR_USERNAME/tour-booking-app.git
-git push -u origin master
+### Port Configuration
+
+- **API Port:** 5050 (configured in `launchSettings.json`)
+- **Frontend Port:** 5173 (default Vite port)
+- **CORS:** Configured to allow frontend on port 5173
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
