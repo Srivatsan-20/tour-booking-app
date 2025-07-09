@@ -49,6 +49,27 @@ namespace TourBookingAPI.Controllers
             return Ok(upcoming);
         }
 
+        // GET: api/Bookings
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<object>>> GetAllBookings()
+        {
+            var bookings = await _context.Bookings
+                .OrderByDescending(b => b.StartDate)
+                .Select(b => new
+                {
+                    id = b.Id,
+                    customerName = b.CustomerName,
+                    startDate = b.StartDate,
+                    endDate = b.EndDate,
+                    totalRent = b.TotalRent,
+                    pickupLocation = b.PickupLocation,
+                    dropLocation = b.DropLocation
+                })
+                .ToListAsync();
+
+            return Ok(bookings);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBooking(int id)
         {

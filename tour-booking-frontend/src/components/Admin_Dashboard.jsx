@@ -65,6 +65,10 @@ const Admin_Dashboard = () => {
           <div className="p-3 border rounded bg-white">
             <h5>Trip Accounts</h5>
             <p>Track income vs expenses (diesel, driver, etc.) and calculate profits.</p>
+            <div className="d-flex gap-2">
+              <Button variant="primary" onClick={() => navigate("/admin/trip-accounts")}>📊 View All Trip Accounts</Button>
+              <Button variant="warning" onClick={() => navigate("/admin/trip-accounts/add")}>💰 Add Trip Account</Button>
+            </div>
           </div>
         </Col>
         <Col md={12}>

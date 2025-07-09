@@ -18,5 +18,6 @@
         public string SpecialRequirements { get; set; } = string.Empty;
         public string PaymentMode { get; set; } = string.Empty;
         public string Language { get; set; } = "English";
+        public decimal TotalRent { get; set; }
     }
 }

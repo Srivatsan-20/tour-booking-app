@@ -18,6 +18,7 @@ const BookingForm = () => {
     specialRequirements: "",
     paymentMode: "Online",
     language: "English",
+    totalRent: "",
   };
 
   const [formData, setFormData] = useState(initialState);
@@ -35,6 +36,7 @@ const BookingForm = () => {
     if (!formData.endDate) newErrors.endDate = "End date is required.";
     if (!formData.pickupLocation.trim()) newErrors.pickupLocation = "Pickup location is required.";
     if (!formData.dropLocation.trim()) newErrors.dropLocation = "Drop location is required.";
+    if (!formData.totalRent || formData.totalRent <= 0) newErrors.totalRent = "Total rent is required and must be greater than 0.";
     return newErrors;
   };
 
@@ -193,6 +195,25 @@ const BookingForm = () => {
           <Form.Label>Special Requirements</Form.Label>
           <Form.Control as="textarea" rows={2} name="specialRequirements" value={formData.specialRequirements} onChange={handleChange} />
         </Form.Group>
+
+        <Row>
+          <Col md={6}>
+            <Form.Group className="mb-3">
+              <Form.Label>Total Rent (₹) *</Form.Label>
+              <Form.Control
+                type="number"
+                name="totalRent"
+                value={formData.totalRent}
+                onChange={handleChange}
+                placeholder="Enter total rent amount"
+                min="0"
+                step="0.01"
+                isInvalid={!!errors.totalRent}
+              />
+              <Form.Control.Feedback type="invalid">{errors.totalRent}</Form.Control.Feedback>
+            </Form.Group>
+          </Col>
+        </Row>
 
         <Row>
           <Col md={6}>
