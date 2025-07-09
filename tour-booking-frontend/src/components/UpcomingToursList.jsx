@@ -50,11 +50,16 @@ const UpcomingToursList = () => {
       ) : bookings.length === 0 ? (
         <Alert variant="info">No upcoming tours found.</Alert>
       ) : (
-        <Table striped bordered hover>
+        <Table striped bordered hover responsive>
           <thead>
             <tr>
               <th>Customer</th>
               <th>Start Date</th>
+              <th>Days</th>
+              <th>Buses</th>
+              <th>Total Rent</th>
+              <th>Advance Paid</th>
+              <th>Balance</th>
               <th>Phone</th>
               <th>Actions</th>
             </tr>
@@ -64,6 +69,13 @@ const UpcomingToursList = () => {
               <tr key={b.id}>
                 <td>{b.customerName}</td>
                 <td>{new Date(b.startDate).toLocaleDateString()}</td>
+                <td>{b.numberOfDays || 'N/A'}</td>
+                <td>{b.numberOfBuses || 1}</td>
+                <td>₹{(b.totalRent || 0).toFixed(2)}</td>
+                <td>₹{(b.advancePaid || 0).toFixed(2)}</td>
+                <td className={b.balanceToBePaid > 0 ? 'text-danger fw-bold' : 'text-success'}>
+                  ₹{(b.balanceToBePaid || 0).toFixed(2)}
+                </td>
                 <td>{b.phone}</td>
                 <td>
                   <Button variant="info" size="sm" onClick={() => navigate(`/admin/tour/${b.id}`)}>

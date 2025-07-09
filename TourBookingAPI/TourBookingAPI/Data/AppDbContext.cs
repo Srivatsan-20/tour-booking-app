@@ -8,6 +8,7 @@ namespace TourBookingAPI.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<BookingBusRent> BookingBusRents { get; set; }
         public DbSet<TripExpense> TripExpenses { get; set; }
         public DbSet<BusExpense> BusExpenses { get; set; }
         public DbSet<FuelEntry> FuelEntries { get; set; }
@@ -18,6 +19,12 @@ namespace TourBookingAPI.Data
             base.OnModelCreating(modelBuilder);
 
             // Configure relationships
+            modelBuilder.Entity<BookingBusRent>()
+                .HasOne(bbr => bbr.Booking)
+                .WithMany(b => b.BusRents)
+                .HasForeignKey(bbr => bbr.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<TripExpense>()
                 .HasOne(te => te.Booking)
                 .WithMany()

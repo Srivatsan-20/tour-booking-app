@@ -71,11 +71,18 @@ const Admin_Dashboard = () => {
             </div>
           </div>
         </Col>
-        <Col md={12}>
+        <Col md={6}>
           <div className="p-3 border rounded bg-white">
             <h5>Booking</h5>
             <p>Navigate to book a new tour.</p>
             <Button variant="success" onClick={() => navigate("/booking")}>+ Go to Tour Booking Form</Button>
+          </div>
+        </Col>
+        <Col md={6}>
+          <div className="p-3 border rounded bg-white">
+            <h5>📄 PDF Generator</h5>
+            <p>Test and preview the beautiful PDF generation feature.</p>
+            <Button variant="info" onClick={() => navigate("/pdf-preview")}>🎨 View PDF Preview</Button>
           </div>
         </Col>
       </Row>

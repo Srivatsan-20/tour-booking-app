@@ -8,6 +8,7 @@ import AddTripAccount from "./components/AddTripAccount";
 import TripAccountsList from "./components/TripAccountsList";
 import TripAccountDetail from "./components/TripAccountDetail";
 import EditTripAccount from "./components/EditTripAccount";
+import PDFPreview from "./components/PDFPreview";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/admin/trip-accounts/add" element={<AddTripAccount />} />
         <Route path="/admin/trip-accounts/:id" element={<TripAccountDetail />} />
         <Route path="/admin/trip-accounts/:id/edit" element={<EditTripAccount />} />
+        <Route path="/pdf-preview" element={<PDFPreview />} />
       </Routes>
     </Router>
   );

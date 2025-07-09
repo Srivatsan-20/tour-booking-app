@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TourBookingAPI.Data;
 
@@ -11,9 +12,11 @@ using TourBookingAPI.Data;
 namespace TourBookingAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250709141017_AddDetailedRentCalculation")]
+    partial class AddDetailedRentCalculation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -98,46 +101,9 @@ namespace TourBookingAPI.Migrations
                     b.Property<decimal>("TotalRent")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<bool>("UseIndividualBusRates")
-                        .HasColumnType("bit");
-
                     b.HasKey("Id");
 
                     b.ToTable("Bookings");
-                });
-
-            modelBuilder.Entity("TourBookingAPI.Models.BookingBusRent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BookingId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("BusNumber")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("BusType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal?>("MountainRent")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("PerDayRent")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookingId");
-
-                    b.ToTable("BookingBusRents");
                 });
 
             modelBuilder.Entity("TourBookingAPI.Models.BusExpense", b =>
@@ -248,17 +214,6 @@ namespace TourBookingAPI.Migrations
                     b.ToTable("TripExpenses");
                 });
 
-            modelBuilder.Entity("TourBookingAPI.Models.BookingBusRent", b =>
-                {
-                    b.HasOne("TourBookingAPI.Models.Booking", "Booking")
-                        .WithMany("BusRents")
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Booking");
-                });
-
             modelBuilder.Entity("TourBookingAPI.Models.BusExpense", b =>
                 {
                     b.HasOne("TourBookingAPI.Models.TripExpense", "TripExpense")
@@ -301,11 +256,6 @@ namespace TourBookingAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Booking");
-                });
-
-            modelBuilder.Entity("TourBookingAPI.Models.Booking", b =>
-                {
-                    b.Navigation("BusRents");
                 });
 
             modelBuilder.Entity("TourBookingAPI.Models.BusExpense", b =>

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Table, Spinner, Alert } from "react-bootstrap";
+import { Container, Row, Col, Table, Spinner, Alert, Button } from "react-bootstrap";
+import { generateBookingPDF } from "../utils/pdfGenerator";
+import { generateSimpleBookingPDF } from "../utils/simplePdfGenerator";
 
 const Admin_Dashboard = () => {
   const [bookings, setBookings] = useState([]);
@@ -37,6 +39,46 @@ const Admin_Dashboard = () => {
     fetchBookings();
   }, []);
 
+  const handleDownloadPDF = async (booking) => {
+    try {
+      // Convert booking data to match the expected format
+      const bookingData = {
+        customerName: booking.customerName,
+        phone: booking.phone || 'N/A',
+        email: booking.email || 'N/A',
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        pickupLocation: booking.pickupLocation,
+        dropLocation: booking.dropLocation,
+        numberOfPassengers: booking.numberOfPassengers || 1,
+        numberOfBuses: booking.numberOfBuses || 1,
+        busType: booking.busType || 'Standard',
+        placesToCover: booking.placesToCover || 'N/A',
+        preferredRoute: booking.preferredRoute || 'N/A',
+        specialRequirements: booking.specialRequirements || 'None',
+        paymentMode: booking.paymentMode || 'Online',
+        language: booking.language || 'English',
+        useIndividualBusRates: booking.useIndividualBusRates || false,
+        perDayRent: booking.perDayRent || 0,
+        mountainRent: booking.mountainRent || 0,
+        totalRent: booking.totalRent || 0,
+        advancePaid: booking.advancePaid || 0,
+        busRents: booking.busRents || []
+      };
+
+      try {
+        generateBookingPDF(bookingData, booking.id);
+      } catch (advancedError) {
+        console.error('Advanced PDF generation error:', advancedError);
+        // Try simple PDF as fallback
+        generateSimpleBookingPDF(bookingData, booking.id);
+      }
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
+  };
+
   return (
     <Container className="mt-5 p-4 border rounded shadow bg-light">
       <h2 className="text-center mb-4 text-primary">📊 Admin Dashboard</h2>
@@ -56,17 +98,41 @@ const Admin_Dashboard = () => {
                   <tr>
                     <th>Customer</th>
                     <th>Start Date</th>
-                    <th>Pickup</th>
+                    <th>Days</th>
+                    <th>Buses</th>
+                    <th>Total Rent</th>
+                    <th>Balance</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.map((b) => (
-                    <tr key={b.id}>
-                      <td>{b.customerName}</td>
-                      <td>{new Date(b.startDate).toLocaleDateString()}</td>
-                      <td>{b.pickupLocation}</td>
-                    </tr>
-                  ))}
+                  {bookings.map((b) => {
+                    const days = Math.ceil((new Date(b.endDate) - new Date(b.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+                    const balance = (b.totalRent || 0) - (b.advancePaid || 0);
+
+                    return (
+                      <tr key={b.id}>
+                        <td>{b.customerName}</td>
+                        <td>{new Date(b.startDate).toLocaleDateString()}</td>
+                        <td>{days}</td>
+                        <td>{b.numberOfBuses || 1}</td>
+                        <td>₹{(b.totalRent || 0).toLocaleString()}</td>
+                        <td className={balance > 0 ? "text-danger" : "text-success"}>
+                          ₹{balance.toLocaleString()}
+                        </td>
+                        <td>
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => handleDownloadPDF(b)}
+                            title="Download PDF Confirmation"
+                          >
+                            📄 PDF
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </Table>
             )}
