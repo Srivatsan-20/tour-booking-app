@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Spinner, Alert, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import Logo from "./Logo";
 
 const Admin_Dashboard = () => {
   const [upcomingCount, setUpcomingCount] = useState(0);
@@ -38,7 +39,16 @@ const Admin_Dashboard = () => {
 
   return (
     <Container className="mt-5 p-4 border rounded shadow bg-light">
-      <h2 className="text-center mb-4 text-primary">📊 Admin Dashboard</h2>
+      {/* Header with Logo */}
+      <div className="text-center mb-4">
+        <Logo size="large" showText={true} variant="default" />
+        <h2 className="mt-3" style={{ color: '#8B4513', fontWeight: 'bold' }}>
+          📊 Admin Dashboard
+        </h2>
+        <p style={{ color: '#666', fontSize: '16px' }}>
+          Manage your tours and travel operations
+        </p>
+      </div>
       <Row className="g-4">
         <Col md={6}>
           <div className="p-3 border rounded bg-white">
@@ -57,8 +67,19 @@ const Admin_Dashboard = () => {
         </Col>
         <Col md={6}>
           <div className="p-3 border rounded bg-white">
-            <h5>Bus Allocation</h5>
-            <p>Assign buses to tours & view availability by date.</p>
+            <h5>🚌 Bus Management</h5>
+            <p>Manage your bus fleet, onboard new buses, and track allocations.</p>
+            <div className="d-flex gap-2 flex-wrap">
+              <Button variant="primary" size="sm" onClick={() => navigate("/admin/bus-fleet")}>
+                🚌 Fleet Management
+              </Button>
+              <Button variant="success" size="sm" onClick={() => navigate("/admin/bus-onboarding")}>
+                ➕ Onboard Bus
+              </Button>
+              <Button variant="info" size="sm" onClick={() => navigate("/admin/bus-allocation")}>
+                📅 Allocations
+              </Button>
+            </div>
           </div>
         </Col>
         <Col md={12}>

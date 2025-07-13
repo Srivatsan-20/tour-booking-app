@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Table, Spinner, Alert, Button } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import { generateBookingPDF } from "../utils/pdfGenerator";
 import { generateSimpleBookingPDF } from "../utils/simplePdfGenerator";
 
 const Admin_Dashboard = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -81,7 +83,15 @@ const Admin_Dashboard = () => {
 
   return (
     <Container className="mt-5 p-4 border rounded shadow bg-light">
-      <h2 className="text-center mb-4 text-primary">📊 Admin Dashboard</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="text-primary mb-0">📊 Upcoming Tours</h2>
+        <Button
+          variant="outline-secondary"
+          onClick={() => navigate('/admin')}
+        >
+          ← Admin Dashboard
+        </Button>
+      </div>
       <Row className="g-4">
         <Col md={6}>
           <div className="p-3 border rounded bg-white">

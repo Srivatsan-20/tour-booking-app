@@ -3,7 +3,7 @@ import 'jspdf-autotable';
 
 export const generateBookingPDF = (bookingData, bookingId) => {
   try {
-    console.log('Starting PDF generation...', { bookingData, bookingId });
+    console.log('🎨 Starting Professional PDF generation...', { bookingData, bookingId });
 
     // Validate input data
     if (!bookingData) {
@@ -15,75 +15,106 @@ export const generateBookingPDF = (bookingData, bookingId) => {
 
     const doc = new jsPDF();
 
-    // Colors
-    const primaryColor = [41, 128, 185]; // Blue
-    const secondaryColor = [52, 73, 94]; // Dark gray
-    const accentColor = [231, 76, 60]; // Red
-    const lightGray = [236, 240, 241];
-
-    // Helper function to add colored rectangle
-    const addColoredRect = (x, y, width, height, color) => {
-      doc.setFillColor(...color);
-      doc.rect(x, y, width, height, 'F');
+    // Professional Color Palette
+    const colors = {
+      primary: [30, 144, 255],      // Dodger Blue
+      secondary: [25, 25, 112],     // Midnight Blue
+      accent: [255, 165, 0],        // Orange
+      success: [34, 139, 34],       // Forest Green
+      warning: [255, 140, 0],       // Dark Orange
+      danger: [220, 20, 60],        // Crimson
+      light: [248, 249, 250],       // Light Gray
+      dark: [33, 37, 41],           // Dark Gray
+      white: [255, 255, 255],       // White
+      border: [222, 226, 230],      // Border Gray
+      text: [33, 37, 41],           // Text Dark
+      textMuted: [108, 117, 125]    // Muted Text
     };
 
-    // Header Section
-    addColoredRect(0, 0, 210, 40, primaryColor);
+    // Professional Helper Functions
+    const addGradientHeader = () => {
+      // Main header background
+      doc.setFillColor(...colors.primary);
+      doc.rect(0, 0, 210, 45, 'F');
 
-    // Company Logo/Name
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.text('🚌 TOUR BOOKING', 20, 20);
+      // Accent stripe
+      doc.setFillColor(...colors.accent);
+      doc.rect(0, 40, 210, 5, 'F');
 
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Professional Tour & Travel Services', 20, 28);
+      // Company branding
+      doc.setTextColor(...colors.white);
+      doc.setFontSize(28);
+      doc.setFont('helvetica', 'bold');
+      doc.text('🚌 PREMIUM TOURS', 15, 22);
 
-    // Booking Confirmation Badge
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('BOOKING CONFIRMED', 140, 20);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Professional Travel & Tourism Services', 15, 30);
+      doc.text('📞 +91-1800-TOURS (86877) | 📧 bookings@premiumtours.com', 15, 36);
 
-    doc.setFontSize(10);
-    doc.text(`Booking ID: #${bookingId}`, 140, 28);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 140, 34);
+      // Booking status badge
+      doc.setFillColor(...colors.success);
+      doc.roundedRect(140, 8, 55, 20, 3, 3, 'F');
 
-    // Reset text color
-    doc.setTextColor(0, 0, 0);
+      doc.setTextColor(...colors.white);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('✓ CONFIRMED', 145, 20);
 
-    // Customer Information Section
+      // Booking details
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`ID: #${bookingId}`, 145, 25);
+    };
+
+    const addSection = (title, yPos, icon = '') => {
+      // Section background
+      doc.setFillColor(...colors.light);
+      doc.rect(10, yPos - 5, 190, 12, 'F');
+
+      // Section border
+      doc.setDrawColor(...colors.border);
+      doc.setLineWidth(0.5);
+      doc.rect(10, yPos - 5, 190, 12);
+
+      // Section title
+      doc.setTextColor(...colors.primary);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${icon} ${title}`, 15, yPos + 2);
+
+      return yPos + 15;
+    };
+
+    const addInfoRow = (label, value, yPos, leftCol = 15) => {
+      doc.setTextColor(...colors.text);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${label}:`, leftCol, yPos);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.textMuted);
+      doc.text(value || 'N/A', leftCol + 35, yPos);
+
+      return yPos + 6;
+    };
+
+    const addTwoColumnInfo = (leftLabel, leftValue, rightLabel, rightValue, yPos) => {
+      addInfoRow(leftLabel, leftValue, yPos, 15);
+      addInfoRow(rightLabel, rightValue, yPos, 110);
+      return yPos + 6;
+    };
+
+    // Generate Professional PDF Content
+    addGradientHeader();
+
     let yPos = 55;
 
-    // Section Header
-    addColoredRect(15, yPos - 5, 180, 8, lightGray);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...secondaryColor);
-    doc.text('👤 CUSTOMER INFORMATION', 20, yPos);
-
-    yPos += 15;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-
-    // Customer details in two columns
-    const customerInfo = [
-      ['Customer Name:', bookingData.customerName || 'N/A'],
-      ['Phone Number:', bookingData.phone || 'N/A'],
-      ['Email Address:', bookingData.email || 'N/A'],
-      ['Language Preference:', bookingData.language || 'English']
-    ];
-
-    customerInfo.forEach(([label, value], index) => {
-      const xPos = index % 2 === 0 ? 20 : 110;
-      const currentY = yPos + Math.floor(index / 2) * 8;
-
-      doc.setFont('helvetica', 'bold');
-      doc.text(label, xPos, currentY);
-      doc.setFont('helvetica', 'normal');
-      doc.text(value || 'N/A', xPos + 35, currentY);
-    });
+    // Customer Information Section
+    yPos = addSection('CUSTOMER INFORMATION', yPos, '👤');
+    yPos = addTwoColumnInfo('Full Name', bookingData.customerName, 'Phone Number', bookingData.phone, yPos);
+    yPos = addTwoColumnInfo('Email Address', bookingData.email, 'Language', bookingData.language || 'English', yPos);
+    yPos += 5;
 
     // Trip Information Section
     yPos += 40;

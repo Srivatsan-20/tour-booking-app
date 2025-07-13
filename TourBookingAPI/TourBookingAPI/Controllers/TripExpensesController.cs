@@ -302,6 +302,85 @@ namespace TourBookingAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        // PUT: api/TripExpenses/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTripExpense(int id, TripExpenseUpdateDto tripExpenseDto)
+        {
+            try
+            {
+                // Find the trip expense
+                var tripExpense = await _context.TripExpenses
+                    .Include(te => te.BusExpenses)
+                        .ThenInclude(be => be.FuelEntries)
+                    .Include(te => te.BusExpenses)
+                        .ThenInclude(be => be.OtherExpenses)
+                    .FirstOrDefaultAsync(te => te.Id == id);
+
+                if (tripExpense == null)
+                {
+                    return NotFound($"Trip expense with ID {id} not found.");
+                }
+
+                // Update bus expenses
+                foreach (var busExpenseDto in tripExpenseDto.BusExpenses)
+                {
+                    var existingBusExpense = tripExpense.BusExpenses.FirstOrDefault(be => be.Id == busExpenseDto.Id);
+
+                    if (existingBusExpense != null)
+                    {
+                        // Update existing bus expense
+                        existingBusExpense.DriverBatta = busExpenseDto.DriverBatta;
+                        existingBusExpense.NumberOfDays = busExpenseDto.NumberOfDays;
+                        existingBusExpense.StartingOdometer = busExpenseDto.StartingOdometer;
+                        existingBusExpense.EndingOdometer = busExpenseDto.EndingOdometer;
+
+                        // Update fuel entries
+                        // Remove existing fuel entries
+                        _context.FuelEntries.RemoveRange(existingBusExpense.FuelEntries);
+
+                        // Add new fuel entries
+                        foreach (var fuelDto in busExpenseDto.FuelEntries)
+                        {
+                            if (!string.IsNullOrEmpty(fuelDto.Location) || fuelDto.Liters > 0 || fuelDto.Cost > 0)
+                            {
+                                existingBusExpense.FuelEntries.Add(new FuelEntry
+                                {
+                                    Location = fuelDto.Location,
+                                    Liters = fuelDto.Liters,
+                                    Cost = fuelDto.Cost
+                                });
+                            }
+                        }
+
+                        // Update other expenses
+                        // Remove existing other expenses
+                        _context.OtherExpenses.RemoveRange(existingBusExpense.OtherExpenses);
+
+                        // Add new other expenses
+                        foreach (var expenseDto in busExpenseDto.OtherExpenses)
+                        {
+                            if (!string.IsNullOrEmpty(expenseDto.Description) || expenseDto.Amount > 0)
+                            {
+                                existingBusExpense.OtherExpenses.Add(new OtherExpense
+                                {
+                                    Description = expenseDto.Description,
+                                    Amount = expenseDto.Amount
+                                });
+                            }
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Trip expense updated successfully", id = tripExpense.Id });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 
     // DTOs for request/response
@@ -320,6 +399,12 @@ namespace TourBookingAPI.Controllers
         public List<BusExpenseDto>? BusExpenses { get; set; }
     }
 
+    public class TripExpenseUpdateDto
+    {
+        public int BookingId { get; set; }
+        public List<BusExpenseUpdateDto> BusExpenses { get; set; } = new List<BusExpenseUpdateDto>();
+    }
+
     public class BusExpenseDto
     {
         public string BusNumber { get; set; } = string.Empty;
@@ -331,6 +416,18 @@ namespace TourBookingAPI.Controllers
         public List<OtherExpenseDto> OtherExpenses { get; set; } = new List<OtherExpenseDto>();
     }
 
+    public class BusExpenseUpdateDto
+    {
+        public int Id { get; set; }
+        public string BusNumber { get; set; } = string.Empty;
+        public decimal DriverBatta { get; set; }
+        public int NumberOfDays { get; set; }
+        public decimal? StartingOdometer { get; set; }
+        public decimal? EndingOdometer { get; set; }
+        public List<FuelEntryUpdateDto> FuelEntries { get; set; } = new List<FuelEntryUpdateDto>();
+        public List<OtherExpenseUpdateDto> OtherExpenses { get; set; } = new List<OtherExpenseUpdateDto>();
+    }
+
     public class FuelEntryDto
     {
         public string Location { get; set; } = string.Empty;
@@ -340,6 +437,21 @@ namespace TourBookingAPI.Controllers
 
     public class OtherExpenseDto
     {
+        public string Description { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+    }
+
+    public class FuelEntryUpdateDto
+    {
+        public int? Id { get; set; }
+        public string Location { get; set; } = string.Empty;
+        public decimal Liters { get; set; }
+        public decimal Cost { get; set; }
+    }
+
+    public class OtherExpenseUpdateDto
+    {
+        public int? Id { get; set; }
         public string Description { get; set; } = string.Empty;
         public decimal Amount { get; set; }
     }

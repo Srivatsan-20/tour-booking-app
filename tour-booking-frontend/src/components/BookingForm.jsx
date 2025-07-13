@@ -1,10 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Form, Button, Alert, Spinner } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { generateBookingPDF } from "../utils/pdfGenerator";
 import { generateSimpleBookingPDF } from "../utils/simplePdfGenerator";
+import { generateProfessionalBookingPDF } from "../utils/professionalPdfGenerator";
+import { generateContractAgreementPDF } from "../utils/contractAgreementPDF";
+import Logo from "./Logo";
 
 const BookingForm = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const initialState = {
     customerName: "",
     phone: "",
@@ -17,7 +23,6 @@ const BookingForm = () => {
     busType: "AC Sleeper",
     numberOfBuses: 1,
     placesToCover: "",
-    preferredRoute: "",
     specialRequirements: "",
     paymentMode: "Online",
     language: "English",
@@ -28,13 +33,42 @@ const BookingForm = () => {
     totalRent: "",
     useIndividualBusRates: false,
     busRents: [],
+    // Bus selection (optional)
+    enableBusSelection: false,
+    selectedBuses: [],
+    // PDF format selection
+    pdfFormat: "contract",
   };
 
   const [formData, setFormData] = useState(initialState);
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
   const [errors, setErrors] = useState({});
-  const navigate = useNavigate();
+  const [availableBuses, setAvailableBuses] = useState([]);
+
+  // Handle pre-filled data from Tour Planner
+  useEffect(() => {
+    if (location.state) {
+      const { placesToCover, suggestedDays, tourPlan } = location.state;
+
+      if (placesToCover) {
+        setFormData(prev => ({
+          ...prev,
+          placesToCover: placesToCover
+        }));
+
+        // Show success message about imported tour plan
+        setStatusMessage({
+          type: "success",
+          message: `🤖 AI Tour Plan imported! Places to cover: ${placesToCover}`
+        });
+      }
+
+      if (suggestedDays && tourPlan) {
+        console.log('📋 Tour plan imported from AI Planner:', tourPlan);
+      }
+    }
+  }, [location.state]);
 
   const validateFields = () => {
     const newErrors = {};
@@ -127,6 +161,16 @@ const BookingForm = () => {
       } else {
         updatedData.busRents = [];
       }
+    } else if (name === 'enableBusSelection') {
+      // Reset selected buses when toggling bus selection
+      if (!checked) {
+        updatedData.selectedBuses = [];
+      }
+    }
+
+    // Fetch available buses when dates change
+    if ((name === 'startDate' || name === 'endDate') && updatedData.startDate && updatedData.endDate) {
+      fetchAvailableBuses(updatedData.startDate, updatedData.endDate);
     }
 
     // Auto-calculate total rent when relevant fields change
@@ -154,6 +198,42 @@ const BookingForm = () => {
     updatedData.totalRent = calculateTotalRent(updatedData);
 
     setFormData(updatedData);
+  };
+
+  // Fetch available buses when dates change
+  const fetchAvailableBuses = async (startDate, endDate) => {
+    if (!startDate || !endDate) {
+      setAvailableBuses([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:5050/api/Bus/Available?startDate=${startDate}&endDate=${endDate}`
+      );
+      if (response.ok) {
+        const buses = await response.json();
+        setAvailableBuses(buses);
+      } else {
+        console.error('Failed to fetch available buses');
+        setAvailableBuses([]);
+      }
+    } catch (error) {
+      console.error('Error fetching available buses:', error);
+      setAvailableBuses([]);
+    }
+  };
+
+  // Handle bus selection
+  const handleBusSelection = (busId, isSelected) => {
+    const updatedSelectedBuses = isSelected
+      ? [...formData.selectedBuses, busId]
+      : formData.selectedBuses.filter(id => id !== busId);
+
+    setFormData(prev => ({
+      ...prev,
+      selectedBuses: updatedSelectedBuses
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -209,29 +289,64 @@ const BookingForm = () => {
       if (response.ok) {
         const result = await response.json();
 
-        // Generate beautiful PDF
+        // Generate PDF based on selected format
         try {
-          generateBookingPDF(submissionData, result.id);
-          setStatusMessage({
-            type: "success",
-            message: `🎉 Booking confirmed! Reference ID: ${result.id}. Beautiful PDF confirmation has been downloaded automatically.`
-          });
-        } catch (pdfError) {
-          console.error("Advanced PDF generation error:", pdfError);
+          let pdfResult;
+          let pdfMessage;
 
-          // Try simple PDF as fallback
+          switch (submissionData.pdfFormat) {
+            case 'contract':
+              pdfResult = await generateContractAgreementPDF(submissionData, result.id);
+              pdfMessage = 'Contract Agreement PDF has been downloaded automatically.';
+              break;
+            case 'professional':
+              pdfResult = await generateProfessionalBookingPDF(submissionData, result.id);
+              pdfMessage = 'Professional PDF with Sri Sai Senthil logo has been downloaded automatically.';
+              break;
+            case 'simple':
+              pdfResult = generateSimpleBookingPDF(submissionData, result.id);
+              pdfMessage = 'Simple booking PDF has been downloaded automatically.';
+              break;
+            default:
+              pdfResult = await generateContractAgreementPDF(submissionData, result.id);
+              pdfMessage = 'Contract Agreement PDF has been downloaded automatically.';
+          }
+
+          if (pdfResult.success) {
+            setStatusMessage({
+              type: "success",
+              message: `🎉 Booking confirmed! Reference ID: ${result.id}. ${pdfMessage}`
+            });
+          } else {
+            throw new Error(pdfResult.error);
+          }
+        } catch (pdfError) {
+          console.error("Professional PDF generation error:", pdfError);
+
+          // Try advanced PDF as fallback
           try {
-            generateSimpleBookingPDF(submissionData, result.id);
+            generateBookingPDF(submissionData, result.id);
             setStatusMessage({
               type: "success",
               message: `✅ Booking confirmed! Reference ID: ${result.id}. PDF confirmation has been downloaded.`
             });
-          } catch (simplePdfError) {
-            console.error("Simple PDF generation error:", simplePdfError);
-            setStatusMessage({
-              type: "success",
-              message: `✅ Booking confirmed! Reference ID: ${result.id}. (PDF generation failed, but booking is successful)`
-            });
+          } catch (advancedPdfError) {
+            console.error("Advanced PDF generation error:", advancedPdfError);
+
+            // Try simple PDF as final fallback
+            try {
+              generateSimpleBookingPDF(submissionData, result.id);
+              setStatusMessage({
+                type: "success",
+                message: `✅ Booking confirmed! Reference ID: ${result.id}. Basic PDF confirmation has been downloaded.`
+              });
+            } catch (simplePdfError) {
+              console.error("Simple PDF generation error:", simplePdfError);
+              setStatusMessage({
+                type: "success",
+                message: `✅ Booking confirmed! Reference ID: ${result.id}. (PDF generation failed, but booking is successful)`
+              });
+            }
           }
         }
 
@@ -249,10 +364,35 @@ const BookingForm = () => {
 
   return (
     <Container className="mt-5 p-4 border rounded shadow bg-light">
-      <h2 className="text-center mb-4 text-primary">🚌 Tour Booking Form</h2>
+      {/* Header with Logo */}
+      <div className="text-center mb-4">
+        <Logo size="large" showText={true} variant="default" />
+        <h2 className="mt-3" style={{ color: '#8B4513', fontWeight: 'bold' }}>
+          Tour Booking Form
+        </h2>
+        <p style={{ color: '#666', fontSize: '16px' }}>
+          Book your spiritual and cultural journey with us
+        </p>
+      </div>
 
       <div className="text-end mb-3">
-        <Button variant="secondary" onClick={() => navigate("/")}>
+        <Button
+          variant="outline-primary"
+          onClick={() => navigate("/")}
+          style={{
+            borderColor: '#8B4513',
+            color: '#8B4513',
+            backgroundColor: 'transparent'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#8B4513';
+            e.target.style.color = 'white';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = 'transparent';
+            e.target.style.color = '#8B4513';
+          }}
+        >
           ⬅️ Back to Home
         </Button>
       </div>
@@ -342,14 +482,93 @@ const BookingForm = () => {
           </Col>
         </Row>
 
-        <Form.Group className="mb-3">
-          <Form.Label>Places to Cover</Form.Label>
-          <Form.Control as="textarea" rows={2} name="placesToCover" value={formData.placesToCover} onChange={handleChange} />
-        </Form.Group>
+        {/* Optional Bus Selection */}
+        <div className="border rounded p-3 mb-4 bg-light">
+          <Form.Group className="mb-3">
+            <Form.Check
+              type="checkbox"
+              name="enableBusSelection"
+              checked={formData.enableBusSelection}
+              onChange={handleChange}
+              label="🚌 Select specific buses (optional)"
+              className="mb-2"
+            />
+            <small className="text-muted">
+              {formData.enableBusSelection
+                ? "Choose specific buses from your fleet for this booking"
+                : "Leave unchecked to allocate buses later from admin dashboard"}
+            </small>
+          </Form.Group>
+
+          {formData.enableBusSelection && (
+            <div>
+              {formData.startDate && formData.endDate ? (
+                availableBuses.length > 0 ? (
+                  <div>
+                    <h6 className="text-primary mb-3">Available Buses ({availableBuses.length})</h6>
+                    <Row>
+                      {availableBuses.map(bus => (
+                        <Col md={6} key={bus.id} className="mb-3">
+                          <div className="border rounded p-3 bg-white">
+                            <Form.Check
+                              type="checkbox"
+                              id={`bus-${bus.id}`}
+                              checked={formData.selectedBuses.includes(bus.id)}
+                              onChange={(e) => handleBusSelection(bus.id, e.target.checked)}
+                              label={
+                                <div>
+                                  <strong>{bus.registrationNumber}</strong>
+                                  <div className="text-muted small">
+                                    {bus.busType} | {bus.make} {bus.model} |
+                                    Capacity: {bus.seatingCapacity + bus.sleeperCapacity}
+                                  </div>
+                                  <div className="text-success small">
+                                    ₹{bus.defaultPerDayRent}/day
+                                    {bus.defaultMountainRent && ` + ₹${bus.defaultMountainRent} mountain`}
+                                  </div>
+                                </div>
+                              }
+                            />
+                          </div>
+                        </Col>
+                      ))}
+                    </Row>
+                    {formData.selectedBuses.length > 0 && (
+                      <div className="mt-3 p-2 bg-success text-white rounded">
+                        <strong>Selected: {formData.selectedBuses.length} bus(es)</strong>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Alert variant="warning">
+                    No buses available for the selected dates. You can still proceed with the booking and allocate buses later.
+                  </Alert>
+                )
+              ) : (
+                <Alert variant="info">
+                  Please select start and end dates to see available buses.
+                </Alert>
+              )}
+            </div>
+          )}
+        </div>
 
         <Form.Group className="mb-3">
-          <Form.Label>Preferred Route</Form.Label>
-          <Form.Control as="textarea" rows={2} name="preferredRoute" value={formData.preferredRoute} onChange={handleChange} />
+          <Form.Label>
+            Places to Cover
+            <Button
+              variant="outline-primary"
+              size="sm"
+              className="ms-2"
+              onClick={() => navigate('/tour-planner')}
+            >
+              🤖 Use AI Planner
+            </Button>
+          </Form.Label>
+          <Form.Control as="textarea" rows={2} name="placesToCover" value={formData.placesToCover} onChange={handleChange} />
+          <Form.Text className="text-muted">
+            Use our AI Tour Planner to get optimized itineraries for your trip
+          </Form.Text>
         </Form.Group>
 
         <Form.Group className="mb-3">
@@ -584,6 +803,52 @@ const BookingForm = () => {
                 <option>English</option>
                 <option>Tamil</option>
               </Form.Select>
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* PDF Format Selection */}
+        <Row className="mb-4">
+          <Col>
+            <Form.Group>
+              <Form.Label style={{ fontWeight: 'bold', color: '#8B4513' }}>
+                📄 PDF Format Selection
+              </Form.Label>
+              <div className="d-flex gap-3 flex-wrap">
+                <Form.Check
+                  type="radio"
+                  id="contract-pdf"
+                  name="pdfFormat"
+                  label="📋 Contract Agreement (Recommended)"
+                  value="contract"
+                  checked={formData.pdfFormat === 'contract'}
+                  onChange={handleChange}
+                  style={{ color: '#8B4513' }}
+                />
+                <Form.Check
+                  type="radio"
+                  id="professional-pdf"
+                  name="pdfFormat"
+                  label="🎨 Professional Format"
+                  value="professional"
+                  checked={formData.pdfFormat === 'professional'}
+                  onChange={handleChange}
+                  style={{ color: '#8B4513' }}
+                />
+                <Form.Check
+                  type="radio"
+                  id="simple-pdf"
+                  name="pdfFormat"
+                  label="📝 Simple Format"
+                  value="simple"
+                  checked={formData.pdfFormat === 'simple'}
+                  onChange={handleChange}
+                  style={{ color: '#8B4513' }}
+                />
+              </div>
+              <Form.Text className="text-muted">
+                Choose your preferred PDF format. Contract Agreement is recommended for official bookings.
+              </Form.Text>
             </Form.Group>
           </Col>
         </Row>
