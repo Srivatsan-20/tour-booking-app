@@ -25,6 +25,15 @@ namespace TourBookingAPI.Data
         public DbSet<TripStop> TripStops { get; set; }
         public DbSet<TripPlace> TripPlaces { get; set; }
 
+        // Public Booking entities
+        public DbSet<CustomerAccount> CustomerAccounts { get; set; }
+        public DbSet<PublicBooking> PublicBookings { get; set; }
+        public DbSet<CustomerPayment> CustomerPayments { get; set; }
+        public DbSet<CustomerReview> CustomerReviews { get; set; }
+        public DbSet<BusPhoto> BusPhotos { get; set; }
+        public DbSet<BusAmenity> BusAmenities { get; set; }
+        public DbSet<BusAmenityMapping> BusAmenityMappings { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -119,6 +128,70 @@ namespace TourBookingAPI.Data
                 .WithMany()
                 .HasForeignKey(tp => tp.TouristPlaceId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Public Booking relationships
+            modelBuilder.Entity<PublicBooking>()
+                .HasOne(pb => pb.CustomerAccount)
+                .WithMany(ca => ca.Bookings)
+                .HasForeignKey(pb => pb.CustomerAccountId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<PublicBooking>()
+                .HasOne(pb => pb.Bus)
+                .WithMany()
+                .HasForeignKey(pb => pb.BusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CustomerPayment>()
+                .HasOne(cp => cp.Booking)
+                .WithMany(pb => pb.Payments)
+                .HasForeignKey(cp => cp.PublicBookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CustomerReview>()
+                .HasOne(cr => cr.Booking)
+                .WithMany()
+                .HasForeignKey(cr => cr.PublicBookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CustomerReview>()
+                .HasOne(cr => cr.CustomerAccount)
+                .WithMany(ca => ca.Reviews)
+                .HasForeignKey(cr => cr.CustomerAccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CustomerReview>()
+                .HasOne(cr => cr.Bus)
+                .WithMany()
+                .HasForeignKey(cr => cr.BusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<BusPhoto>()
+                .HasOne(bp => bp.Bus)
+                .WithMany()
+                .HasForeignKey(bp => bp.BusId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<BusAmenityMapping>()
+                .HasOne(bam => bam.Bus)
+                .WithMany()
+                .HasForeignKey(bam => bam.BusId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<BusAmenityMapping>()
+                .HasOne(bam => bam.BusAmenity)
+                .WithMany(ba => ba.BusAmenityMappings)
+                .HasForeignKey(bam => bam.BusAmenityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Unique constraints
+            modelBuilder.Entity<CustomerAccount>()
+                .HasIndex(ca => ca.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<PublicBooking>()
+                .HasIndex(pb => pb.BookingNumber)
+                .IsUnique();
         }
     }
 }

@@ -16,40 +16,17 @@ const CustomerDashboard = () => {
 
   const fetchCustomerBookings = async () => {
     try {
-      // Mock data for customer bookings
-      // In production, this would fetch from API based on customer ID
-      const mockBookings = [
-        {
-          id: 30,
-          customerName: 'Priya Sharma',
-          startDate: '2025-01-15',
-          endDate: '2025-01-20',
-          pickupLocation: 'Mumbai',
-          dropLocation: 'Goa',
-          numberOfBuses: 1,
-          busType: 'AC Sleeper',
-          totalRent: 25000,
-          advancePaid: 10000,
-          status: 'confirmed',
-          busRegistration: 'MH-01-AB-1234'
-        },
-        {
-          id: 35,
-          customerName: 'Priya Sharma',
-          startDate: '2025-08-15',
-          endDate: '2025-08-20',
-          pickupLocation: 'Delhi',
-          dropLocation: 'Manali',
-          numberOfBuses: 1,
-          busType: 'AC Seater',
-          totalRent: 35000,
-          advancePaid: 15000,
-          status: 'upcoming',
-          busRegistration: 'DL-07-MN-1357'
-        }
-      ];
+      // Get customer ID from auth context (placeholder for now)
+      const customerId = 1; // This should come from authentication
 
-      setBookings(mockBookings);
+      const response = await fetch(`http://localhost:5050/api/public/account/${customerId}/bookings`);
+
+      if (response.ok) {
+        const bookings = await response.json();
+        setBookings(bookings);
+      } else {
+        throw new Error(`Failed to fetch bookings: ${response.status}`);
+      }
     } catch (err) {
       setError('Failed to fetch bookings');
     } finally {
@@ -65,7 +42,7 @@ const CustomerDashboard = () => {
       completed: { bg: 'secondary', text: 'Completed' },
       cancelled: { bg: 'danger', text: 'Cancelled' }
     };
-    
+
     const config = statusConfig[status] || { bg: 'secondary', text: 'Unknown' };
     return <Badge bg={config.bg}>{config.text}</Badge>;
   };
@@ -96,7 +73,7 @@ const CustomerDashboard = () => {
           <p className="text-muted">Welcome back, {user?.name}!</p>
         </Col>
         <Col xs="auto">
-          <Button 
+          <Button
             variant="success"
             onClick={() => navigate('/booking')}
           >
@@ -158,7 +135,7 @@ const CustomerDashboard = () => {
           {bookings.length === 0 ? (
             <div className="text-center p-4">
               <p className="text-muted">No bookings found.</p>
-              <Button 
+              <Button
                 variant="primary"
                 onClick={() => navigate('/booking')}
               >
@@ -182,7 +159,7 @@ const CustomerDashboard = () => {
                 {bookings.map(booking => {
                   const balance = calculateBalance(booking.totalRent, booking.advancePaid);
                   const days = Math.ceil((new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60 * 60 * 24)) + 1;
-                  
+
                   return (
                     <tr key={booking.id}>
                       <td>
@@ -273,25 +250,25 @@ const CustomerDashboard = () => {
             </Card.Header>
             <Card.Body>
               <div className="d-flex gap-2 flex-wrap">
-                <Button 
+                <Button
                   variant="outline-primary"
                   onClick={() => navigate('/booking')}
                 >
                   ➕ New Booking
                 </Button>
-                <Button 
+                <Button
                   variant="outline-success"
                   onClick={() => navigate('/customer/payments')}
                 >
                   💳 Payment History
                 </Button>
-                <Button 
+                <Button
                   variant="outline-info"
                   onClick={() => navigate('/customer/profile')}
                 >
                   👤 Update Profile
                 </Button>
-                <Button 
+                <Button
                   variant="outline-secondary"
                   onClick={() => navigate('/customer/support')}
                 >

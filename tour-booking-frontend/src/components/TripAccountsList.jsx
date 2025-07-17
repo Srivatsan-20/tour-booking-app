@@ -12,8 +12,8 @@ const TripAccountsList = () => {
     const fetchTripAccounts = async () => {
       try {
         const startTime = performance.now();
-        console.log("Fetching trip accounts from:", "http://localhost:5050/api/TripExpenses");
-        const response = await fetch("http://localhost:5050/api/TripExpenses");
+        console.log("Fetching trip accounts from:", "http://localhost:5051/api/TripExpenses");
+        const response = await fetch("http://localhost:5051/api/TripExpenses");
         const fetchTime = performance.now() - startTime;
         console.log(`Response status: ${response.status}, Fetch time: ${fetchTime.toFixed(2)}ms`);
 

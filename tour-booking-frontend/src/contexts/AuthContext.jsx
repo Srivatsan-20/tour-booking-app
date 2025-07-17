@@ -176,7 +176,7 @@ export const AuthProvider = ({ children }) => {
       console.log('🔄 Authenticating user:', credentials.username);
 
       // Try real API first
-      const response = await fetch('http://localhost:5050/api/Users/authenticate', {
+      const response = await fetch('http://localhost:5051/api/Users/authenticate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

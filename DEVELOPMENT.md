@@ -37,8 +37,8 @@ npm run dev
 ### Access the Application
 
 - **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:5050
-- **API Documentation:** http://localhost:5050/swagger
+- **Backend API:** http://localhost:5051
+- **API Documentation:** http://localhost:5051/swagger
 
 ## 🔧 Development Workflow
 
@@ -103,14 +103,14 @@ dotnet tool install --global dotnet-ef
 - Check connection string in `appsettings.json`
 - Try using SQL Server Express LocalDB
 
-**Issue:** Port 5050 already in use
+**Issue:** Port 5051 already in use
 **Solution:** Change port in `launchSettings.json`
 
 ### Frontend Issues
 
 **Issue:** "Failed to fetch" errors
 **Solution:**
-- Ensure backend is running on port 5050
+- Ensure backend is running on port 5051
 - Check browser console for CORS errors
 - Verify API URLs in components
 

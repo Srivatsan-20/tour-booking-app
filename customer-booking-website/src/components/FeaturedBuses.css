@@ -1,0 +1,313 @@
+/* Featured Buses Styles */
+.featured-buses {
+  padding: 0;
+}
+
+.bus-card {
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.bus-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Bus Image */
+.bus-image-container {
+  position: relative;
+  overflow: hidden;
+  height: 200px;
+}
+
+.bus-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.bus-card:hover .bus-image {
+  transform: scale(1.05);
+}
+
+.bus-type-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+}
+
+.capacity-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+}
+
+/* Bus Header */
+.bus-header {
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 1rem;
+}
+
+.bus-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.rating-section {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.stars {
+  display: flex;
+  align-items: center;
+}
+
+.stars i {
+  font-size: 0.9rem;
+  margin-right: 2px;
+}
+
+/* Amenities */
+.amenities-section {
+  padding: 0.5rem 0;
+}
+
+.amenities-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.amenities-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.amenity-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+}
+
+/* Price Section */
+.price-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  margin-top: auto;
+}
+
+.price-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+}
+
+.price-amount {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #007bff;
+}
+
+.price-period {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-left: 0.25rem;
+}
+
+/* Action Buttons */
+.action-buttons {
+  margin-top: 1rem;
+}
+
+.action-buttons .btn {
+  border-radius: 25px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+}
+
+.action-buttons .btn:hover {
+  transform: translateY(-1px);
+}
+
+.action-buttons .btn-outline-primary:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.action-buttons .btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+/* Loading and Error States */
+.text-center.py-5 {
+  padding: 3rem 1rem;
+}
+
+.text-center.py-5 i.fa-bus {
+  opacity: 0.3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .bus-image-container {
+    height: 180px;
+  }
+  
+  .bus-name {
+    font-size: 1.1rem;
+  }
+  
+  .price-amount {
+    font-size: 1.5rem;
+  }
+  
+  .action-buttons .btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .rating-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .rating-section small {
+    margin-left: 0;
+    margin-top: 0.25rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .bus-image-container {
+    height: 160px;
+  }
+  
+  .bus-card {
+    margin-bottom: 1.5rem;
+  }
+  
+  .amenities-list {
+    justify-content: center;
+  }
+  
+  .action-buttons .col {
+    margin-bottom: 0.5rem;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+  }
+}
+
+/* Animation for cards */
+.bus-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Staggered animation for multiple cards */
+.bus-card:nth-child(1) { animation-delay: 0.1s; }
+.bus-card:nth-child(2) { animation-delay: 0.2s; }
+.bus-card:nth-child(3) { animation-delay: 0.3s; }
+.bus-card:nth-child(4) { animation-delay: 0.4s; }
+.bus-card:nth-child(5) { animation-delay: 0.5s; }
+.bus-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Badge styles */
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.badge.bg-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+}
+
+.badge.bg-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+}
+
+/* Hover effects for interactive elements */
+.bus-type-badge .badge,
+.capacity-badge .badge {
+  transition: transform 0.3s ease;
+}
+
+.bus-card:hover .bus-type-badge .badge,
+.bus-card:hover .capacity-badge .badge {
+  transform: scale(1.05);
+}
+
+/* Loading spinner customization */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Alert customization */
+.alert {
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.alert-warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  color: #856404;
+}
+
+/* Empty state styling */
+.text-center.py-5 h4 {
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.text-center.py-5 p {
+  font-size: 1.1rem;
+}
+
+/* Card body flex layout */
+.bus-card .card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.bus-card .card-body > * {
+  flex-shrink: 0;
+}
+
+.price-section {
+  margin-top: auto;
+}

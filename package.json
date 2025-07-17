@@ -1,0 +1,63 @@
+{
+  "name": "sri-sai-senthil-tours-complete-system",
+  "version": "1.0.0",
+  "description": "Complete tour booking system with back office, customer website, and API",
+  "main": "index.js",
+  "scripts": {
+    "start": "powershell -ExecutionPolicy Bypass -File start-all.ps1",
+    "start:backend": "cd TourBookingAPI/TourBookingAPI && dotnet run",
+    "start:backoffice": "cd tour-booking-frontend && npm start",
+    "start:customer": "cd customer-booking-website && npm start",
+    "build": "npm run build:backoffice && npm run build:customer",
+    "build:backoffice": "cd tour-booking-frontend && npm run build",
+    "build:customer": "cd customer-booking-website && npm run build",
+    "install:all": "npm run install:backoffice && npm run install:customer",
+    "install:backoffice": "cd tour-booking-frontend && npm install",
+    "install:customer": "cd customer-booking-website && npm install",
+    "test": "npm run test:backoffice && npm run test:customer",
+    "test:backoffice": "cd tour-booking-frontend && npm test",
+    "test:customer": "cd customer-booking-website && npm test",
+    "dev": "concurrently -n \"API,BackOffice,Customer\" -c \"blue,green,yellow\" \"npm run start:backend\" \"npm run start:backoffice\" \"npm run start:customer\"",
+    "setup": "npm run install:all && cd TourBookingAPI/TourBookingAPI && dotnet restore",
+    "clean": "npm run clean:backoffice && npm run clean:customer",
+    "clean:backoffice": "cd tour-booking-frontend && rm -rf node_modules package-lock.json",
+    "clean:customer": "cd customer-booking-website && rm -rf node_modules package-lock.json"
+  },
+  "keywords": [
+    "tour-booking",
+    "bus-rental",
+    "react",
+    "dotnet",
+    "typescript",
+    "bootstrap"
+  ],
+  "author": "Sri Sai Senthil Tours",
+  "license": "MIT",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "axios": "^1.10.0",
+    "bootstrap": "^5.3.7",
+    "react-bootstrap": "^2.10.10",
+    "react-datepicker": "^8.4.0",
+    "react-image-gallery": "^1.4.0",
+    "react-router-bootstrap": "^0.26.3",
+    "react-router-dom": "^7.6.3"
+  },
+  "devDependencies": {
+    "@types/react-router-bootstrap": "^0.26.8",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Srivatsan-20/tour-booking-app.git"
+  },
+  "workspaces": [
+    "tour-booking-frontend",
+    "customer-booking-website"
+  ]
+}

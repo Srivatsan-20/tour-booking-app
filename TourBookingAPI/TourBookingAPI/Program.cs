@@ -15,9 +15,9 @@ builder.Services.AddControllers()
     });
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowLocalhost5173", policy =>
+    options.AddPolicy("AllowLocalhost", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("http://localhost:3002", "http://localhost:3001", "http://localhost:3000", "http://localhost:5173")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -33,8 +33,19 @@ builder.Services.AddHttpClient<IGoogleMapsService, GoogleMapsService>();
 builder.Services.AddScoped<IGoogleMapsService, GoogleMapsService>();
 builder.Services.AddScoped<ITourPlannerService, TourPlannerService>();
 
+// Public Booking Services
+builder.Services.AddScoped<IPublicBookingService, PublicBookingService>();
+builder.Services.AddScoped<IPhotoUploadService, PhotoUploadService>();
+
 
 var app = builder.Build();
+
+// Seed data (temporarily disabled)
+// using (var scope = app.Services.CreateScope())
+// {
+//     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+//     await SeedData.SeedAsync(context);
+// }
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -49,7 +60,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-app.UseCors("AllowLocalhost5173");
+app.UseCors("AllowLocalhost");
 
 app.UseAuthorization();
 

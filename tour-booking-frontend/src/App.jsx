@@ -34,6 +34,16 @@ import DriverTrips from "./components/DriverTrips";
 import CustomerSupport from "./components/CustomerSupport";
 import BusAvailabilityCalendar from "./components/BusAvailabilityCalendar";
 
+// Public Components
+import PublicLayout from "./components/PublicLayout";
+import PublicHomepage from "./components/PublicHomepage";
+import PublicSearchResults from "./components/PublicSearchResults";
+import PublicBooking from "./components/PublicBooking";
+import PublicAbout from "./components/PublicAbout";
+import PublicContact from "./components/PublicContact";
+import PublicRegister from "./components/PublicRegister";
+import BookingConfirmation from "./components/BookingConfirmation";
+
 // Component to handle role-based dashboard routing
 const DashboardRouter = () => {
   const { user, hasRole } = useAuth();
@@ -53,277 +63,130 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-          <NavigationHeader />
-          <main style={{ flex: 1 }}>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/signin" element={<SignIn />} />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<PublicLayout />}>
+            <Route index element={<PublicHomepage />} />
+            <Route path="search" element={<PublicHomepage />} />
+            <Route path="search-results" element={<PublicSearchResults />} />
+            <Route path="book" element={<PublicBooking />} />
+            <Route path="booking-confirmation" element={<BookingConfirmation />} />
+            <Route path="about" element={<PublicAbout />} />
+            <Route path="contact" element={<PublicContact />} />
+            <Route path="register" element={<PublicRegister />} />
+          </Route>
 
-              {/* Protected Routes */}
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <DashboardRouter />
-                  </ProtectedRoute>
-                }
-              />
+          {/* Auth Routes */}
+          <Route path="/signin" element={<SignIn />} />
 
-              {/* Admin/Manager Routes */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute requiredRole={['admin', 'manager']}>
-                    <Admin_Dashboard />
-                  </ProtectedRoute>
-                }
-              />
+          {/* Admin Dashboard Routes */}
+          <Route path="/admin/*" element={
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <NavigationHeader />
+              <main style={{ flex: 1 }}>
+                <ProtectedRoute>
+                  <Routes>
+                    <Route index element={<DashboardRouter />} />
+                    <Route path="upcoming-tours" element={<UpcomingToursList />} />
+                    <Route path="tour/:id" element={<TourDetail />} />
+                    <Route path="bus-fleet" element={<BusFleetManagement />} />
+                    <Route path="bus-onboarding" element={<BusOnboarding />} />
+                    <Route path="bus-allocation" element={<BusAllocationDashboard />} />
+                    <Route path="bus-allocation/:id" element={<BusAllocationDetail />} />
+                    <Route path="bus/:id" element={<BusDetails />} />
+                    <Route path="bus/:id/edit" element={<BusEdit />} />
+                    <Route path="bus-calendar" element={<BusAvailabilityCalendar />} />
+                    <Route path="trip-accounts" element={<TripAccountsList />} />
+                    <Route path="trip-accounts/add" element={<AddTripAccount />} />
+                    <Route path="trip-accounts/:id" element={<TripAccountDetail />} />
+                    <Route path="trip-accounts/:id/edit" element={<EditTripAccount />} />
+                    <Route path="users" element={<AdminUserManagement />} />
+                    <Route path="pdf-preview" element={<PDFPreview />} />
+                    <Route path="settings" element={<div>Settings Page</div>} />
+                  </Routes>
+                </ProtectedRoute>
+              </main>
+              <Footer />
+            </div>
+          } />
 
-              <Route
-                path="/admin/upcoming-tours"
-                element={
-                  <ProtectedRoute requiredPermission="manage_bookings">
-                    <UpcomingToursList />
-                  </ProtectedRoute>
-                }
-              />
+          {/* Other Protected Routes */}
+          <Route path="/booking" element={
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <NavigationHeader />
+              <main style={{ flex: 1 }}>
+                <ProtectedRoute>
+                  <BookingForm />
+                </ProtectedRoute>
+              </main>
+              <Footer />
+            </div>
+          } />
 
-              <Route
-                path="/admin/tour/:id"
-                element={
-                  <ProtectedRoute requiredPermission="manage_bookings">
-                    <TourDetail />
-                  </ProtectedRoute>
-                }
-              />
+          <Route path="/tour-planner" element={
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <NavigationHeader />
+              <main style={{ flex: 1 }}>
+                <ProtectedRoute>
+                  <SmartTourPlanner />
+                </ProtectedRoute>
+              </main>
+              <Footer />
+            </div>
+          } />
 
-              <Route
-                path="/admin/trip-accounts"
-                element={
-                  <ProtectedRoute requiredPermission="manage_trip_accounts">
-                    <TripAccountsList />
-                  </ProtectedRoute>
-                }
-              />
+          <Route path="/profile" element={
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <NavigationHeader />
+              <main style={{ flex: 1 }}>
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              </main>
+              <Footer />
+            </div>
+          } />
 
-              <Route
-                path="/admin/trip-accounts/add"
-                element={
-                  <ProtectedRoute requiredPermission="manage_trip_accounts">
-                    <AddTripAccount />
-                  </ProtectedRoute>
-                }
-              />
+          {/* Driver Routes */}
+          <Route path="/driver/*" element={
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <NavigationHeader />
+              <main style={{ flex: 1 }}>
+                <ProtectedRoute>
+                  <Routes>
+                    <Route index element={<DriverDashboard />} />
+                    <Route path="trips" element={<DriverTrips />} />
+                    <Route path="trips/:id" element={<DriverTripDetail />} />
+                    <Route path="expenses" element={<DriverExpenseManagement />} />
+                  </Routes>
+                </ProtectedRoute>
+              </main>
+              <Footer />
+            </div>
+          } />
 
-              <Route
-                path="/admin/trip-accounts/:id"
-                element={
-                  <ProtectedRoute requiredPermission="manage_trip_accounts">
-                    <TripAccountDetail />
-                  </ProtectedRoute>
-                }
-              />
+          {/* Customer Routes */}
+          <Route path="/customer/*" element={
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <NavigationHeader />
+              <main style={{ flex: 1 }}>
+                <ProtectedRoute>
+                  <Routes>
+                    <Route index element={<CustomerDashboard />} />
+                    <Route path="bookings" element={<div>Customer Bookings</div>} />
+                    <Route path="bookings/:id" element={<CustomerBookingDetail />} />
+                    <Route path="payment" element={<CustomerPayment />} />
+                    <Route path="support" element={<CustomerSupport />} />
+                  </Routes>
+                </ProtectedRoute>
+              </main>
+              <Footer />
+            </div>
+          } />
 
-              <Route
-                path="/admin/trip-accounts/:id/edit"
-                element={
-                  <ProtectedRoute requiredPermission="manage_trip_accounts">
-                    <EditTripAccount />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/admin/bus-onboarding"
-                element={
-                  <ProtectedRoute requiredPermission="manage_buses">
-                    <BusOnboarding />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/admin/bus-fleet"
-                element={
-                  <ProtectedRoute requiredPermission="view_buses">
-                    <BusFleetManagement />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/admin/bus-fleet/:id"
-                element={
-                  <ProtectedRoute requiredPermission="view_buses">
-                    <BusDetails />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/admin/bus-fleet/:id/edit"
-                element={
-                  <ProtectedRoute requiredPermission="manage_buses">
-                    <BusEdit />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/admin/bus-allocation"
-                element={
-                  <ProtectedRoute requiredPermission="manage_allocations">
-                    <BusAllocationDashboard />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/admin/bus-allocation/:id"
-                element={
-                  <ProtectedRoute requiredPermission="manage_allocations">
-                    <BusAllocationDetail />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/admin/bus-calendar"
-                element={
-                  <ProtectedRoute requiredPermission="manage_allocations">
-                    <BusAvailabilityCalendar />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Booking Routes - Available to multiple roles */}
-              <Route
-                path="/booking"
-                element={
-                  <ProtectedRoute requiredPermission="create_booking">
-                    <BookingForm />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/tour-planner"
-                element={
-                  <ProtectedRoute requiredPermission="create_booking">
-                    <SmartTourPlanner />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/pdf-preview"
-                element={
-                  <ProtectedRoute>
-                    <PDFPreview />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Driver Routes - Admin can also access */}
-              <Route
-                path="/driver"
-                element={
-                  <ProtectedRoute requiredRole={['driver', 'admin']}>
-                    <DriverDashboard />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/driver/trip/:id"
-                element={
-                  <ProtectedRoute requiredRole={['driver', 'admin']}>
-                    <DriverTripDetail />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/driver/expenses/:tripId"
-                element={
-                  <ProtectedRoute requiredRole={['driver', 'admin']}>
-                    <DriverExpenseManagement />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/driver/trips"
-                element={
-                  <ProtectedRoute requiredRole={['driver', 'admin']}>
-                    <DriverTrips />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Customer Routes - Admin can also access */}
-              <Route
-                path="/customer"
-                element={
-                  <ProtectedRoute requiredRole={['customer', 'admin']}>
-                    <CustomerDashboard />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/customer/booking/:id"
-                element={
-                  <ProtectedRoute requiredRole={['customer', 'admin']}>
-                    <CustomerBookingDetail />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/customer/payment/:bookingId"
-                element={
-                  <ProtectedRoute requiredRole={['customer', 'admin']}>
-                    <CustomerPayment />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/customer/support"
-                element={
-                  <ProtectedRoute requiredRole={['customer', 'admin']}>
-                    <CustomerSupport />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Admin User Management */}
-              <Route
-                path="/admin/users"
-                element={
-                  <ProtectedRoute requiredPermission="manage_users">
-                    <AdminUserManagement />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Profile Route - Available to all authenticated users */}
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <UserProfile />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Fallback Route */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+          {/* Fallback Route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </Router>
     </AuthProvider>
   );

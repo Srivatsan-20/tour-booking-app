@@ -13,8 +13,8 @@ const Admin_Dashboard = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        console.log("Attempting to fetch from: http://localhost:5050/api/Bookings/Upcoming");
-        const res = await fetch("http://localhost:5050/api/Bookings/Upcoming");
+        console.log("Attempting to fetch from: http://localhost:5051/api/Bookings/Upcoming");
+        const res = await fetch("http://localhost:5051/api/Bookings/Upcoming");
         console.log("Response status:", res.status);
         if (!res.ok) throw new Error(`Failed to fetch bookings: ${res.status} ${res.statusText}`);
         const data = await res.json();

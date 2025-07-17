@@ -53,55 +53,11 @@ const BusAvailabilityCalendar = () => {
     } catch (err) {
       console.error('❌ Error fetching data:', err);
 
-      // Fallback to mock data if API fails
-      console.log('🔄 Using fallback mock data...');
-      const mockBuses = [
-        { id: 1, registrationNumber: 'MH-01-AB-1234', busType: 'AC Sleeper' },
-        { id: 2, registrationNumber: 'TN-02-CD-5678', busType: 'AC Seater' },
-        { id: 3, registrationNumber: 'KA-03-EF-9012', busType: 'Non-AC Seater' },
-        { id: 4, registrationNumber: 'GJ-04-GH-3456', busType: 'AC Sleeper' },
-        { id: 5, registrationNumber: 'UP-05-KL-2468', busType: 'AC Seater' },
-        { id: 6, registrationNumber: 'WB-06-NO-1357', busType: 'Non-AC Seater' }
-      ];
-
-      // Create mock allocations for current month to test
-      const currentYear = currentDate.getFullYear();
-      const currentMonth = currentDate.getMonth();
-
-      const mockAllocations = [
-        {
-          id: 1,
-          busId: 1,
-          bookingId: 29,
-          customerName: 'jaina',
-          tripStartDate: new Date(currentYear, currentMonth, 6).toISOString().split('T')[0],
-          tripEndDate: new Date(currentYear, currentMonth, 8).toISOString().split('T')[0],
-          status: 'allocated'
-        },
-        {
-          id: 2,
-          busId: 2,
-          bookingId: 30,
-          customerName: 'Priya Sharma',
-          tripStartDate: new Date(currentYear, currentMonth, 10).toISOString().split('T')[0],
-          tripEndDate: new Date(currentYear, currentMonth, 15).toISOString().split('T')[0],
-          status: 'in_progress'
-        },
-        {
-          id: 3,
-          busId: 3,
-          bookingId: 31,
-          customerName: 'Rajesh Patel',
-          tripStartDate: new Date(currentYear, currentMonth, 20).toISOString().split('T')[0],
-          tripEndDate: new Date(currentYear, currentMonth, 25).toISOString().split('T')[0],
-          status: 'allocated'
-        }
-      ];
-
-      console.log('📅 Mock allocations for current month:', mockAllocations);
-
-      setBuses(mockBuses);
-      setAllocations(mockAllocations);
+      // Handle API error - show empty state instead of mock data
+      console.error('Failed to load calendar data, showing empty state');
+      setError(`Failed to load calendar data: ${err.message}`);
+      setBuses([]);
+      setAllocations([]);
     } finally {
       setLoading(false);
     }

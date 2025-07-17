@@ -17,34 +17,14 @@ const CustomerBookingDetail = () => {
 
   const fetchBookingDetails = async () => {
     try {
-      // Mock booking data - in production, fetch from API
-      const mockBooking = {
-        id: parseInt(id),
-        customerName: 'Priya Sharma',
-        phone: '+91-9876543210',
-        email: 'priya.sharma@email.com',
-        startDate: '2025-08-15',
-        endDate: '2025-08-20',
-        pickupLocation: 'Delhi',
-        dropLocation: 'Manali',
-        numberOfBuses: 1,
-        busType: 'AC Seater',
-        totalRent: 35000,
-        advancePaid: 15000,
-        status: 'confirmed',
-        busRegistration: 'DL-07-MN-1357',
-        driverName: 'Rajesh Kumar',
-        driverPhone: '+91-9876543211',
-        bookingDate: '2025-07-01',
-        notes: 'Hill station trip with scenic route preferred',
-        paymentHistory: [
-          { id: 1, amount: 15000, date: '2025-07-01', method: 'UPI', status: 'completed' }
-        ],
-        tripStatus: 'upcoming',
-        estimatedArrival: null
-      };
+      const response = await fetch(`http://localhost:5050/api/Bookings/${id}`);
 
-      setBooking(mockBooking);
+      if (response.ok) {
+        const bookingData = await response.json();
+        setBooking(bookingData);
+      } else {
+        throw new Error(`Failed to fetch booking: ${response.status}`);
+      }
     } catch (err) {
       setError('Failed to fetch booking details');
     } finally {
@@ -60,7 +40,7 @@ const CustomerBookingDetail = () => {
       completed: { bg: 'secondary', text: 'Completed' },
       cancelled: { bg: 'danger', text: 'Cancelled' }
     };
-    
+
     const config = statusConfig[status] || { bg: 'secondary', text: 'Unknown' };
     return <Badge bg={config.bg}>{config.text}</Badge>;
   };
@@ -130,8 +110,8 @@ const CustomerBookingDetail = () => {
           <div className="d-flex justify-content-between align-items-center">
             <h5 className="mb-0">📋 Booking Status & Payment</h5>
             {balance > 0 && (
-              <Button 
-                variant="light" 
+              <Button
+                variant="light"
                 size="sm"
                 onClick={() => navigate(`/customer/payment/${booking.id}`)}
               >
@@ -166,8 +146,8 @@ const CustomerBookingDetail = () => {
                   <small><strong>Payment Progress</strong></small>
                   <small>{paymentProgress.toFixed(1)}%</small>
                 </div>
-                <ProgressBar 
-                  now={paymentProgress} 
+                <ProgressBar
+                  now={paymentProgress}
                   variant={paymentProgress === 100 ? 'success' : 'warning'}
                 />
               </div>
@@ -233,7 +213,7 @@ const CustomerBookingDetail = () => {
             </Card.Body>
           </Card>
         </Col>
-        
+
         <Col md={6}>
           <Card>
             <Card.Header className="bg-success text-white">
@@ -361,30 +341,30 @@ const CustomerBookingDetail = () => {
 
       {/* Action Buttons */}
       <div className="text-center">
-        <Button 
-          variant="outline-secondary" 
+        <Button
+          variant="outline-secondary"
           className="me-2"
           onClick={() => navigate("/customer")}
         >
           ← Customer Dashboard
         </Button>
         {balance > 0 && (
-          <Button 
-            variant="success" 
+          <Button
+            variant="success"
             className="me-2"
             onClick={() => navigate(`/customer/payment/${booking.id}`)}
           >
             💳 Make Payment
           </Button>
         )}
-        <Button 
-          variant="outline-primary" 
+        <Button
+          variant="outline-primary"
           className="me-2"
           onClick={() => navigate(`/customer/receipt/${booking.id}`)}
         >
           📄 Download Receipt
         </Button>
-        <Button 
+        <Button
           variant="outline-info"
           onClick={() => navigate('/customer/support')}
         >

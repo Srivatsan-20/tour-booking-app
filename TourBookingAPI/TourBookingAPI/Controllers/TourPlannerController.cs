@@ -76,6 +76,27 @@ namespace TourBookingAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Generate simple AI tour plans
+        /// </summary>
+        [HttpPost("generate-simple-plan")]
+        public async Task<ActionResult<List<SimpleTourPlan>>> GenerateSimplePlans([FromBody] SimplePlanRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("Generating simple tour plans for {PickupLocation} covering {PlaceCount} places in {Days} days",
+                    request.PickupLocation, request.PlacesToCover.Count, request.NumberOfDays);
+
+                var plans = GenerateIntelligentTourPlans(request);
+                return Ok(plans);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating simple tour plans");
+                return StatusCode(500, new { message = "An error occurred while generating tour plans" });
+            }
+        }
+
         private List<TouristPlace> GetFallbackPlaces()
         {
             return new List<TouristPlace>
@@ -260,6 +281,477 @@ namespace TourBookingAPI.Controllers
                 return StatusCode(500, new { message = "An error occurred while optimizing the route" });
             }
         }
+
+        /// <summary>
+        /// Generate intelligent tour plans based on business logic
+        /// </summary>
+        private List<SimpleTourPlan> GenerateIntelligentTourPlans(SimplePlanRequest request)
+        {
+            var plans = new List<SimpleTourPlan>();
+
+            // Plan 1: Efficient Route (Shortest Distance)
+            plans.Add(GenerateEfficientPlan(request));
+
+            // Plan 2: Comfort Route (Rest-focused)
+            plans.Add(GenerateComfortPlan(request));
+
+            // Plan 3: Scenic Route (Tourist-focused)
+            plans.Add(GenerateScenicPlan(request));
+
+            return plans;
+        }
+
+        private SimpleTourPlan GenerateEfficientPlan(SimplePlanRequest request)
+        {
+            var route = OptimizeRouteForEfficiency(request);
+            var stats = CalculateRouteStatistics(route, "efficient");
+
+            return new SimpleTourPlan
+            {
+                PlanName = "Efficient Route",
+                Description = "Optimized for minimal travel time and fuel cost with strategic routing",
+                Route = route,
+                TotalDistance = stats.TotalDistance,
+                TotalTravelTime = stats.TotalTravelTime,
+                RestStops = stats.RestStops,
+                NightTravelHours = stats.NightTravelHours,
+                Features = new List<string>
+                {
+                    "Shortest travel distance between destinations",
+                    "Minimal fuel consumption (₹" + (stats.TotalDistance * 8).ToString("N0") + " estimated)",
+                    "Early morning starts (5:30 AM)",
+                    "Strategic temple visit timings",
+                    "Return to origin by evening"
+                }
+            };
+        }
+
+        private SimpleTourPlan GenerateComfortPlan(SimplePlanRequest request)
+        {
+            var route = OptimizeRouteForComfort(request);
+            var stats = CalculateRouteStatistics(route, "comfort");
+
+            return new SimpleTourPlan
+            {
+                PlanName = "Comfort Route",
+                Description = "Relaxed pace with driver rest, quality hotel stays, and passenger comfort priority",
+                Route = route,
+                TotalDistance = stats.TotalDistance,
+                TotalTravelTime = stats.TotalTravelTime,
+                RestStops = stats.RestStops,
+                NightTravelHours = stats.NightTravelHours,
+                Features = new List<string>
+                {
+                    "No night driving (safety first)",
+                    "Quality hotel stays in each city",
+                    "Extended sightseeing time (4-5 hours per place)",
+                    "Regular meal breaks and rest stops",
+                    "Driver rest periods included",
+                    "Comfortable 7 AM starts (not too early)"
+                }
+            };
+        }
+
+        private List<DayPlan> OptimizeRouteForComfort(SimplePlanRequest request)
+        {
+            var places = request.PlacesToCover.ToList();
+
+            // Comfort plan with enhanced daily limits and return-to-start
+            var route = CreateRouteWithDailyLimit(places, request.PickupLocation, request.NumberOfDays, "comfort");
+
+            return route;
+        }
+
+        private SimpleTourPlan GenerateScenicPlan(SimplePlanRequest request)
+        {
+            var route = OptimizeRouteForSightseeing(request);
+            var stats = CalculateRouteStatistics(route, "scenic");
+
+            return new SimpleTourPlan
+            {
+                PlanName = "Scenic Route",
+                Description = "Maximum sightseeing experience with cultural immersion and photo opportunities",
+                Route = route,
+                TotalDistance = stats.TotalDistance,
+                TotalTravelTime = stats.TotalTravelTime,
+                RestStops = stats.RestStops,
+                NightTravelHours = stats.NightTravelHours,
+                Features = new List<string>
+                {
+                    "Extended sightseeing time (5-6 hours per place)",
+                    "Scenic route selection with photo stops",
+                    "Local cuisine and cultural experiences",
+                    "Temple architecture and history focus",
+                    "Sunrise/sunset viewing opportunities",
+                    "Traditional craft and shopping time"
+                }
+            };
+        }
+
+        private List<DayPlan> OptimizeRouteForSightseeing(SimplePlanRequest request)
+        {
+            var places = request.PlacesToCover.ToList();
+
+            // Scenic plan with enhanced daily limits and return-to-start
+            var route = CreateRouteWithDailyLimit(places, request.PickupLocation, request.NumberOfDays, "scenic");
+
+            return route;
+        }
+
+        // Advanced Route Optimization Methods with 550km Daily Limit
+        private List<DayPlan> OptimizeRouteForEfficiency(SimplePlanRequest request)
+        {
+            var places = request.PlacesToCover.ToList();
+            var optimizedPlaces = OptimizePlaceOrder(places, request.PickupLocation);
+
+            // Create route with 550km daily limit and return-to-start requirement
+            var route = CreateRouteWithDailyLimit(optimizedPlaces, request.PickupLocation, request.NumberOfDays, "efficient");
+
+            return route;
+        }
+
+        private List<DayPlan> CreateRouteWithDailyLimit(List<string> places, string startLocation, int requestedDays, string planType)
+        {
+            const int DAILY_KM_LIMIT = 550;
+            var route = new List<DayPlan>();
+            var optimizedPlaces = OptimizePlaceOrder(places, startLocation);
+
+            // Calculate distances and create route respecting daily limits
+            var currentDay = 1;
+            var currentDayKm = 0;
+            var currentDayPlaces = new List<string>();
+            var previousLocation = startLocation;
+
+            foreach (var place in optimizedPlaces)
+            {
+                var distanceToPlace = GetDistanceBetweenPlaces(previousLocation, place);
+
+                // Check if adding this place exceeds daily limit
+                if (currentDayKm + distanceToPlace > DAILY_KM_LIMIT && currentDayPlaces.Any())
+                {
+                    // Create day plan for current day
+                    route.Add(CreateAdvancedDayPlan(currentDay, currentDayPlaces, currentDayKm, planType));
+
+                    // Start new day
+                    currentDay++;
+                    currentDayPlaces = new List<string> { place };
+                    currentDayKm = distanceToPlace;
+                }
+                else
+                {
+                    currentDayPlaces.Add(place);
+                    currentDayKm += distanceToPlace;
+                }
+
+                previousLocation = place;
+            }
+
+            // Add remaining places to final day
+            if (currentDayPlaces.Any())
+            {
+                // Check return journey distance
+                var returnDistance = GetDistanceBetweenPlaces(previousLocation, startLocation);
+
+                // If return journey exceeds limit, create separate return day
+                if (currentDayKm + returnDistance > DAILY_KM_LIMIT)
+                {
+                    route.Add(CreateAdvancedDayPlan(currentDay, currentDayPlaces, currentDayKm, planType));
+                    currentDay++;
+                    route.Add(CreateReturnDayPlan(currentDay, previousLocation, startLocation, returnDistance, planType));
+                }
+                else
+                {
+                    route.Add(CreateAdvancedDayPlan(currentDay, currentDayPlaces, currentDayKm + returnDistance, planType, true));
+                }
+            }
+
+            return route;
+        }
+
+        private List<string> OptimizePlaceOrder(List<string> places, string startLocation)
+        {
+            // Enhanced geographical optimization for Indian destinations
+            var placeDistances = GetPlaceDistanceMatrix();
+            var startDistance = placeDistances.ContainsKey(startLocation) ? placeDistances[startLocation] : new Dictionary<string, int>();
+
+            // Sort places by distance from start location for optimal routing
+            return places.OrderBy(p => startDistance.ContainsKey(p) ? startDistance[p] : 999).ToList();
+        }
+
+        private Dictionary<string, Dictionary<string, int>> GetPlaceDistanceMatrix()
+        {
+            // Comprehensive distance matrix for major South Indian destinations
+            return new Dictionary<string, Dictionary<string, int>>
+            {
+                ["Chennai"] = new Dictionary<string, int>
+                {
+                    ["Kanchipuram"] = 70,
+                    ["Thiruvannamalai"] = 195,
+                    ["Chidambaram"] = 245,
+                    ["Thanjavur"] = 350,
+                    ["Rameshwaram"] = 570,
+                    ["Madurai"] = 460,
+                    ["Kanyakumari"] = 700,
+                    ["Kodaikanal"] = 520,
+                    ["Ooty"] = 500,
+                    ["Mysore"] = 470,
+                    ["Bangalore"] = 350,
+                    ["Pondicherry"] = 160
+                },
+                ["Dharmapuri"] = new Dictionary<string, int>
+                {
+                    ["Chennai"] = 350,
+                    ["Bangalore"] = 150,
+                    ["Mysore"] = 200,
+                    ["Ooty"] = 250,
+                    ["Kodaikanal"] = 300,
+                    ["Salem"] = 80,
+                    ["Hosur"] = 50,
+                    ["Krishnagiri"] = 40
+                },
+                ["Bangalore"] = new Dictionary<string, int>
+                {
+                    ["Mysore"] = 150,
+                    ["Ooty"] = 280,
+                    ["Chennai"] = 350,
+                    ["Dharmapuri"] = 150,
+                    ["Hosur"] = 40,
+                    ["Kolar"] = 70
+                }
+            };
+        }
+
+        private int GetDistanceBetweenPlaces(string from, string to)
+        {
+            var matrix = GetPlaceDistanceMatrix();
+
+            if (matrix.ContainsKey(from) && matrix[from].ContainsKey(to))
+                return matrix[from][to];
+
+            if (matrix.ContainsKey(to) && matrix[to].ContainsKey(from))
+                return matrix[to][from];
+
+            // Default estimate for unknown routes
+            return 200;
+        }
+
+        private int CalculateOptimalPlacesPerDay(int totalPlaces, int totalDays)
+        {
+            // Realistic distribution: max 2-3 places per day for quality experience
+            var placesPerDay = Math.Max(1, totalPlaces / totalDays);
+            return Math.Min(placesPerDay, 3); // Cap at 3 places per day
+        }
+
+        private List<string> GetPlacesForDay(List<string> places, int day, int placesPerDay)
+        {
+            var startIndex = (day - 1) * placesPerDay;
+            var count = Math.Min(placesPerDay, places.Count - startIndex);
+            return places.Skip(startIndex).Take(count).ToList();
+        }
+
+        private DayPlan CreateAdvancedDayPlan(int dayNumber, List<string> places, int totalKm, string planType, bool isReturnDay = false)
+        {
+            var dayPlaces = new List<PlaceVisit>();
+
+            foreach (var place in places)
+            {
+                var visitDuration = GetRealisticVisitDuration(place, planType);
+                var pois = GetPointsOfInterest(place);
+
+                dayPlaces.Add(new PlaceVisit
+                {
+                    Name = place,
+                    VisitDuration = visitDuration,
+                    PointsOfInterest = pois
+                });
+            }
+
+            return new DayPlan
+            {
+                DayNumber = dayNumber,
+                Places = dayPlaces,
+                IsRestDay = false,
+                IsNightTravel = ShouldIncludeNightTravel(dayNumber, places.Count, planType),
+                TotalKilometers = totalKm,
+                IsReturnDay = isReturnDay
+            };
+        }
+
+        private DayPlan CreateReturnDayPlan(int dayNumber, string fromLocation, string toLocation, int distance, string planType)
+        {
+            return new DayPlan
+            {
+                DayNumber = dayNumber,
+                Places = new List<PlaceVisit>(),
+                IsRestDay = false,
+                IsNightTravel = false,
+                TotalKilometers = distance,
+                IsReturnDay = true,
+                ReturnJourney = $"Return from {fromLocation} to {toLocation}"
+            };
+        }
+
+        private List<string> GetPointsOfInterest(string place)
+        {
+            // Comprehensive POI database for major Indian destinations
+            var poiDatabase = new Dictionary<string, List<string>>
+            {
+                ["Chennai"] = new List<string>
+                {
+                    "Kapaleeshwarar Temple - Ancient Shiva temple with stunning Dravidian architecture",
+                    "Marina Beach - Second longest urban beach, perfect for sunrise/sunset views",
+                    "Fort St. George - Historic British fort and museum"
+                },
+                ["Kanchipuram"] = new List<string>
+                {
+                    "Ekambareswarar Temple - One of Pancha Bhoota Sthalams, darshan: 5:30 AM - 12:30 PM, 4:00 PM - 9:30 PM",
+                    "Kailasanathar Temple - Oldest temple in Kanchipuram, built by Pallavas",
+                    "Varadharaja Perumal Temple - Famous Vishnu temple with 1000-pillar hall"
+                },
+                ["Thiruvannamalai"] = new List<string>
+                {
+                    "Arunachaleswarar Temple - Sacred Shiva temple, darshan: 5:30 AM - 1:00 PM, 3:30 PM - 10:00 PM",
+                    "Arunachala Hill - Sacred mountain for pradakshina (circumambulation)",
+                    "Ramana Ashram - Peaceful spiritual center of Sri Ramana Maharshi"
+                },
+                ["Chidambaram"] = new List<string>
+                {
+                    "Nataraja Temple - Famous for cosmic dance of Shiva, darshan: 6:00 AM - 12:00 PM, 5:00 PM - 10:00 PM",
+                    "Pichavaram Mangrove Forest - Boat rides through scenic backwaters",
+                    "Thillai Kali Temple - Ancient goddess temple"
+                },
+                ["Thanjavur"] = new List<string>
+                {
+                    "Brihadeeswarar Temple - UNESCO World Heritage Chola temple, darshan: 6:00 AM - 8:30 PM",
+                    "Thanjavur Palace - Royal palace with art gallery and library",
+                    "Saraswathi Mahal Library - Ancient manuscript library"
+                },
+                ["Rameshwaram"] = new List<string>
+                {
+                    "Ramanathaswamy Temple - Sacred Jyotirlinga, darshan: 5:00 AM - 1:00 PM, 3:00 PM - 9:00 PM",
+                    "Dhanushkodi Beach - Ghost town with pristine beach, best for sunset photography",
+                    "Pamban Bridge - Iconic railway bridge connecting mainland to island"
+                },
+                ["Madurai"] = new List<string>
+                {
+                    "Meenakshi Amman Temple - Magnificent temple complex, darshan: 5:00 AM - 12:30 PM, 4:00 PM - 10:00 PM",
+                    "Thirumalai Nayakkar Palace - Indo-Saracenic palace architecture",
+                    "Gandhi Memorial Museum - Historical museum in colonial building"
+                },
+                ["Kanyakumari"] = new List<string>
+                {
+                    "Kumari Amman Temple - Southernmost tip temple, darshan: 4:30 AM - 12:20 PM, 4:00 PM - 8:00 PM",
+                    "Sunrise/Sunset Point - Unique place to see both sunrise and sunset over ocean",
+                    "Vivekananda Rock Memorial - Meditation hall on rock island"
+                },
+                ["Kodaikanal"] = new List<string>
+                {
+                    "Kodai Lake - Scenic boat rides and cycling around star-shaped lake",
+                    "Coaker's Walk - Cliff-side walking path with valley views, best at sunrise/sunset",
+                    "Silver Cascade Falls - 180-foot waterfall, best during monsoon season"
+                },
+                ["Ooty"] = new List<string>
+                {
+                    "Nilgiri Mountain Railway - UNESCO heritage toy train through scenic hills",
+                    "Doddabetta Peak - Highest point in Nilgiris with panoramic views",
+                    "Ooty Lake - Boating and horse riding around artificial lake"
+                }
+            };
+
+            return poiDatabase.ContainsKey(place) ? poiDatabase[place] : new List<string>
+            {
+                $"{place} - Local temples and scenic spots (details to be confirmed)"
+            };
+        }
+
+        private string GetRealisticVisitDuration(string place, string planType)
+        {
+            // Temple and tourist place specific durations
+            var templePlaces = new[] { "Kanchipuram", "Thiruvannamalai", "Chidambaram", "Thanjavur", "Rameshwaram" };
+            var hillStations = new[] { "Kodaikanal", "Ooty" };
+
+            if (templePlaces.Contains(place))
+            {
+                return planType == "efficient" ? "2-3 hours" : planType == "comfort" ? "3-4 hours" : "4-5 hours";
+            }
+            else if (hillStations.Contains(place))
+            {
+                return planType == "efficient" ? "4-5 hours" : planType == "comfort" ? "5-6 hours" : "6-8 hours";
+            }
+            else
+            {
+                return planType == "efficient" ? "3-4 hours" : planType == "comfort" ? "4-5 hours" : "5-6 hours";
+            }
+        }
+
+        private bool ShouldIncludeNightTravel(int dayNumber, int totalDays, string planType)
+        {
+            if (planType == "comfort") return false; // Comfort plan avoids night travel
+            if (dayNumber == totalDays) return false; // No night travel on last day
+            return dayNumber > 1; // Night travel after first day for efficiency
+        }
+
+        private RouteStatistics CalculateRouteStatistics(List<DayPlan> route, string planType)
+        {
+            var totalPlaces = route.SelectMany(d => d.Places).Count();
+            var baseDistance = 1200;
+            var distancePerPlace = planType == "efficient" ? 120 : planType == "comfort" ? 150 : 180;
+
+            return new RouteStatistics
+            {
+                TotalDistance = baseDistance + (totalPlaces * distancePerPlace),
+                TotalTravelTime = 16 + (totalPlaces * (planType == "efficient" ? 2 : planType == "comfort" ? 3 : 4)),
+                RestStops = route.Count(d => !d.IsRestDay) - 1,
+                NightTravelHours = route.Count(d => d.IsNightTravel) * 6
+            };
+        }
+    }
+
+    // Helper class for route statistics
+    public class RouteStatistics
+    {
+        public int TotalDistance { get; set; }
+        public int TotalTravelTime { get; set; }
+        public int RestStops { get; set; }
+        public int NightTravelHours { get; set; }
+    }
+
+    // DTOs for Simple Tour Planner
+    public class SimplePlanRequest
+    {
+        public string PickupLocation { get; set; } = string.Empty;
+        public List<string> PlacesToCover { get; set; } = new();
+        public int NumberOfDays { get; set; }
+    }
+
+    public class SimpleTourPlan
+    {
+        public string PlanName { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public List<DayPlan> Route { get; set; } = new();
+        public int TotalDistance { get; set; }
+        public int TotalTravelTime { get; set; }
+        public int RestStops { get; set; }
+        public int NightTravelHours { get; set; }
+        public List<string> Features { get; set; } = new();
+    }
+
+    public class DayPlan
+    {
+        public int DayNumber { get; set; }
+        public List<PlaceVisit> Places { get; set; } = new();
+        public bool IsRestDay { get; set; }
+        public bool IsNightTravel { get; set; }
+        public int TotalKilometers { get; set; }
+        public bool IsReturnDay { get; set; }
+        public string ReturnJourney { get; set; } = string.Empty;
+    }
+
+    public class PlaceVisit
+    {
+        public string Name { get; set; } = string.Empty;
+        public string VisitDuration { get; set; } = string.Empty;
+        public List<string> PointsOfInterest { get; set; } = new();
     }
 
     // Additional DTOs for specific endpoints

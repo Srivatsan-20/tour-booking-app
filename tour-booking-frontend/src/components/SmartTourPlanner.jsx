@@ -1,664 +1,294 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, Badge, ListGroup, Accordion, Modal, Table } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Container, Row, Col, Card, Form, Button, Alert, Badge, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import Logo from './Logo';
-import { runAllTests } from '../utils/testGoogleMapsAPI';
-import ApiTestComponent from './ApiTestComponent';
+import { apiCall, buildApiUrl } from '../config/api';
 
 const SmartTourPlanner = () => {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  // Form state
-  const [formData, setFormData] = useState({
-    startingPoint: 'Dharmapuri',
-    places: [],
-    numberOfDays: 2,
-    maxDrivingHoursPerDay: 10,
-    returnDeadline: '',
-    tripName: ''
-  });
-
-  // Component state
-  const [availablePlaces, setAvailablePlaces] = useState([]);
-  const [selectedPlaces, setSelectedPlaces] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
-  const [feasibilityCheck, setFeasibilityCheck] = useState(null);
-  const [showFeasibilityModal, setShowFeasibilityModal] = useState(false);
-  const [testResults, setTestResults] = useState(null);
-  const [testing, setTesting] = useState(false);
-
-  // Load available places on component mount
-  useEffect(() => {
-    loadAvailablePlaces();
-  }, []);
-
-  const loadAvailablePlaces = async () => {
-    try {
-      const response = await fetch('http://localhost:5050/api/TourPlanner/places');
-
-      if (response.ok) {
-        const places = await response.json();
-        setAvailablePlaces(places);
-      } else {
-        console.error('Failed to load places');
-        // Fallback data
-        setAvailablePlaces([
-          { id: 1, name: 'Kanyakumari', category: 'Beach/Temple', state: 'Tamil Nadu', defaultVisitDurationMinutes: 360, description: 'Southernmost tip of India' },
-          { id: 2, name: 'Chennai', category: 'City', state: 'Tamil Nadu', defaultVisitDurationMinutes: 480, description: 'Capital city with beaches and temples' },
-          { id: 3, name: 'Madurai', category: 'Temple/Heritage', state: 'Tamil Nadu', defaultVisitDurationMinutes: 360, description: 'Temple city with Meenakshi Amman Temple' },
-          { id: 4, name: 'Kodaikanal', category: 'Hill Station', state: 'Tamil Nadu', defaultVisitDurationMinutes: 480, description: 'Princess of Hill Stations' },
-          { id: 5, name: 'Rameshwaram', category: 'Temple/Island', state: 'Tamil Nadu', defaultVisitDurationMinutes: 300, description: 'Sacred island temple' },
-          { id: 6, name: 'Thanjavur', category: 'Temple/Heritage', state: 'Tamil Nadu', defaultVisitDurationMinutes: 240, description: 'Ancient city with Brihadeeswarar Temple' },
-          { id: 7, name: 'Palani', category: 'Temple/Hill', state: 'Tamil Nadu', defaultVisitDurationMinutes: 180, description: 'Hill temple dedicated to Lord Murugan' },
-          { id: 8, name: 'Pondicherry', category: 'Beach/Heritage', state: 'Puducherry', defaultVisitDurationMinutes: 360, description: 'French colonial heritage' }
-        ]);
-      }
-    } catch (error) {
-      console.error('Error loading places:', error);
-    }
-  };
-
-  // Handle form changes
-  const handleInputChange = (e) => {
-    const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseInt(value) : value
-    }));
-  };
-
-  // Handle place selection
-  const handlePlaceSelection = (place, isSelected) => {
-    if (isSelected) {
-      setSelectedPlaces(prev => [...prev, {
-        placeName: place.name,
-        customVisitDurationMinutes: place.defaultVisitDurationMinutes,
-        priority: 1
-      }]);
-    } else {
-      setSelectedPlaces(prev => prev.filter(p => p.placeName !== place.name));
-    }
-  };
-
-  // Update visit duration for a place
-  const updateVisitDuration = (placeName, duration) => {
-    setSelectedPlaces(prev => prev.map(p =>
-      p.placeName === placeName
-        ? { ...p, customVisitDurationMinutes: parseInt(duration) }
-        : p
-    ));
-  };
-
-  // Update priority for a place
-  const updatePriority = (placeName, priority) => {
-    setSelectedPlaces(prev => prev.map(p =>
-      p.placeName === placeName
-        ? { ...p, priority: parseInt(priority) }
-        : p
-    ));
-  };
-
-  // Quick feasibility check
-  const checkFeasibility = async () => {
-    if (selectedPlaces.length === 0) {
-      setError('Please select at least one place');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const request = {
-        startingPoint: formData.startingPoint,
-        places: selectedPlaces,
-        numberOfDays: formData.numberOfDays,
-        maxDrivingHoursPerDay: formData.maxDrivingHoursPerDay
-      };
-
-      const response = await fetch('http://localhost:5050/api/TourPlanner/feasibility-check', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(request)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setFeasibilityCheck(result);
-        setShowFeasibilityModal(true);
-      } else {
-        setError('Failed to check feasibility');
-      }
-    } catch (error) {
-      setError('Error checking feasibility');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Generate full tour plan
-  const generateTourPlan = async () => {
-    if (selectedPlaces.length === 0) {
-      setError('Please select at least one place');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError('');
-      setResult(null);
-
-      const request = {
-        startingPoint: formData.startingPoint,
-        places: selectedPlaces,
-        numberOfDays: formData.numberOfDays,
-        maxDrivingHoursPerDay: formData.maxDrivingHoursPerDay,
-        tripName: formData.tripName || `Tour from ${formData.startingPoint}`,
-        returnDeadline: formData.returnDeadline ? new Date(formData.returnDeadline).toISOString() : null
-      };
-
-      console.log('🚀 Generating smart tour plan...', request);
-
-      const response = await fetch('http://localhost:5050/api/TourPlanner/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(request)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setResult(result);
-        console.log('✅ Smart tour plan generated:', result);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to generate tour plan');
-      }
-    } catch (error) {
-      setError('Error generating tour plan');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Use tour plan for booking
-  const useForBooking = () => {
-    if (!result || !result.dayItineraries) return;
-
-    const placesToCover = result.dayItineraries
-      .flatMap(day => day.stops.filter(stop => stop.stopType === 'Visit'))
-      .map(stop => stop.placeName)
-      .join(', ');
-
-    navigate('/booking', {
-      state: {
-        placesToCover: placesToCover,
-        suggestedDays: result.totalDays,
-        smartTourPlan: result,
-        startingPoint: formData.startingPoint
-      }
+    // Simplified form state
+    const [formData, setFormData] = useState({
+        pickupLocation: '',
+        placesToCover: '',
+        numberOfDays: 3
     });
-  };
 
-  // Test Google Maps API integration
-  const testGoogleMapsIntegration = async () => {
-    setTesting(true);
-    try {
-      const results = await runAllTests();
-      setTestResults(results);
-    } catch (error) {
-      console.error('Test error:', error);
-      setTestResults({ allPassed: false, hasGoogleMaps: false, error: error.message });
-    } finally {
-      setTesting(false);
-    }
-  };
+    // Component state
+    const [loading, setLoading] = useState(false);
+    const [planOptions, setPlanOptions] = useState([]);
+    const [error, setError] = useState('');
 
-  // Format time for display
-  const formatTime = (dateTime) => {
-    return new Date(dateTime).toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
+    // Handle form input changes
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
-  // Format duration
-  const formatDuration = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
+    // Generate AI tour plans
+    const generateTourPlans = async () => {
+        console.log('🎯 Generate button clicked!', formData);
 
-  return (
-    <Container className="py-4">
-      {/* Header */}
-      <Row className="mb-4">
-        <Col>
-          <div className="text-center mb-3">
-            <Logo />
-          </div>
-          <Card className="shadow-sm">
-            <Card.Header className="bg-success text-white">
-              <h3 className="mb-0">🧠 Smart Tour Planner</h3>
-              <small>AI-powered itinerary optimization with Google Maps integration</small>
-            </Card.Header>
-            <Card.Body>
-              <Alert variant="info" className="mb-3">
-                <strong>🎯 Intelligent Features:</strong> Route optimization • Time constraints • Return-to-base by 1:00 AM • Real-time distance calculation • Automatic place exclusion when needed
-              </Alert>
+        if (!formData.pickupLocation || !formData.placesToCover || !formData.numberOfDays) {
+            setError('Please fill in all required fields');
+            console.log('❌ Validation failed:', formData);
+            return;
+        }
 
-              {/* Google Maps API Test */}
-              <div className="d-flex justify-content-between align-items-center">
-                <Button
-                  variant="outline-info"
-                  size="sm"
-                  onClick={testGoogleMapsIntegration}
-                  disabled={testing}
-                >
-                  {testing ? <Spinner size="sm" /> : '🧪'} Test Google Maps API
-                </Button>
+        console.log('✅ Validation passed, starting API call...');
+        setLoading(true);
+        setError('');
+        setPlanOptions([]);
 
-                {testResults && (
-                  <Badge bg={testResults.allPassed ? (testResults.hasGoogleMaps ? 'success' : 'warning') : 'danger'}>
-                    {testResults.allPassed
-                      ? (testResults.hasGoogleMaps ? '✅ Google Maps Active' : '⚠️ Fallback Mode')
-                      : '❌ API Error'
-                    }
-                  </Badge>
-                )}
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+        try {
+            const requestData = {
+                pickupLocation: formData.pickupLocation,
+                placesToCover: formData.placesToCover.split(',').map(p => p.trim()),
+                numberOfDays: parseInt(formData.numberOfDays)
+            };
 
-      {/* API Test Component */}
-      <Row className="mb-3">
-        <Col>
-          <ApiTestComponent />
-        </Col>
-      </Row>
+            console.log('📤 Sending request:', requestData);
 
-      <Row>
-        {/* Input Form */}
-        <Col lg={6}>
-          <Card className="shadow-sm mb-4">
-            <Card.Header>
-              <h5 className="mb-0">📝 Plan Your Smart Tour</h5>
-            </Card.Header>
-            <Card.Body>
-              {/* Basic Settings */}
-              <Row className="mb-3">
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Starting Point</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="startingPoint"
-                      value={formData.startingPoint}
-                      onChange={handleInputChange}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Number of Days</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="numberOfDays"
-                      value={formData.numberOfDays}
-                      onChange={handleInputChange}
-                      min="1"
-                      max="30"
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
+            // Use centralized API call
+            const result = await apiCall('/api/TourPlanner/generate-simple-plan', {
+                method: 'POST',
+                body: JSON.stringify(requestData)
+            });
 
-              <Row className="mb-3">
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Max Driving Hours/Day</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="maxDrivingHoursPerDay"
-                      value={formData.maxDrivingHoursPerDay}
-                      onChange={handleInputChange}
-                      min="6"
-                      max="16"
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Return Deadline (Optional)</Form.Label>
-                    <Form.Control
-                      type="datetime-local"
-                      name="returnDeadline"
-                      value={formData.returnDeadline}
-                      onChange={handleInputChange}
-                    />
-                    <Form.Text className="text-muted">Default: 1:00 AM next day</Form.Text>
-                  </Form.Group>
-                </Col>
-              </Row>
+            if (result.success) {
+                console.log('✅ Plans received:', result.data);
+                setPlanOptions(result.data);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (err) {
+            console.error('❌ Error generating plans:', err);
+            setError(`Failed to generate tour plans: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-              <Form.Group className="mb-3">
-                <Form.Label>Trip Name (Optional)</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="tripName"
-                  value={formData.tripName}
-                  onChange={handleInputChange}
-                  placeholder="e.g., South India Temple Tour"
-                />
-              </Form.Group>
+    // Use selected plan for booking
+    const usePlanForBooking = (plan) => {
+        const placesToCover = plan.route.map(day =>
+            day.places.map(place => place.name).join(', ')
+        ).join(', ');
 
-              {/* Place Selection */}
-              <Form.Group className="mb-3">
-                <Form.Label>
-                  Select Places to Visit
-                  <Badge bg="info" className="ms-2">{selectedPlaces.length} selected</Badge>
-                </Form.Label>
-                <div style={{ maxHeight: '300px', overflowY: 'auto' }} className="border rounded p-2">
-                  {availablePlaces.map(place => {
-                    const isSelected = selectedPlaces.some(sp => sp.placeName === place.name);
-                    return (
-                      <div key={place.id} className="mb-2">
-                        <Form.Check
-                          type="checkbox"
-                          id={`place-${place.id}`}
-                          checked={isSelected}
-                          onChange={(e) => handlePlaceSelection(place, e.target.checked)}
-                          label={
-                            <div>
-                              <strong>{place.name}</strong>
-                              <Badge bg="secondary" className="ms-2">{place.state}</Badge>
-                              <Badge bg="info" className="ms-1">{place.category}</Badge>
-                              <Badge bg="warning" className="ms-1">{formatDuration(place.defaultVisitDurationMinutes)}</Badge>
-                              <br />
-                              <small className="text-muted">{place.description}</small>
+        navigate('/booking', {
+            state: {
+                placesToCover: placesToCover,
+                suggestedDays: formData.numberOfDays,
+                tourPlan: plan
+            }
+        });
+    };
+
+    return (
+        <Container className="mt-4">
+            <Row>
+                <Col md={12}>
+                    <Card className="shadow">
+                        <Card.Header className="bg-primary text-white">
+                            <div className="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 className="mb-0">🧠 AI Smart Tour Planner</h4>
+                                    <small>Get intelligent route suggestions for your bus tours</small>
+                                </div>
+                                <Button variant="outline-light" onClick={() => navigate('/admin')}>
+                                    ← Back to Dashboard
+                                </Button>
                             </div>
-                          }
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </Form.Group>
+                        </Card.Header>
+                        <Card.Body>
+                            {error && <Alert variant="danger">{error}</Alert>}
 
-              {/* Selected Places Configuration */}
-              {selectedPlaces.length > 0 && (
-                <Card className="mb-3">
-                  <Card.Header>
-                    <h6 className="mb-0">🎯 Selected Places Configuration</h6>
-                  </Card.Header>
-                  <Card.Body>
-                    {selectedPlaces.map((place, index) => (
-                      <Row key={index} className="mb-2 align-items-center">
-                        <Col md={4}>
-                          <strong>{place.placeName}</strong>
-                        </Col>
-                        <Col md={4}>
-                          <Form.Control
-                            type="number"
-                            size="sm"
-                            value={place.customVisitDurationMinutes}
-                            onChange={(e) => updateVisitDuration(place.placeName, e.target.value)}
-                            min="30"
-                            max="720"
-                          />
-                          <Form.Text>Visit duration (minutes)</Form.Text>
-                        </Col>
-                        <Col md={4}>
-                          <Form.Select
-                            size="sm"
-                            value={place.priority}
-                            onChange={(e) => updatePriority(place.placeName, e.target.value)}
-                          >
-                            <option value={1}>High Priority</option>
-                            <option value={2}>Medium Priority</option>
-                            <option value={3}>Low Priority</option>
-                          </Form.Select>
-                        </Col>
-                      </Row>
-                    ))}
-                  </Card.Body>
-                </Card>
-              )}
+                            {/* Simple Input Form */}
+                            <Row className="mb-4">
+                                <Col md={4}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label><strong>Pickup/Drop Location</strong></Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            name="pickupLocation"
+                                            value={formData.pickupLocation}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g., Chennai, Dharmapuri"
+                                            required
+                                        />
+                                        <Form.Text className="text-muted">
+                                            Starting and ending point of the tour
+                                        </Form.Text>
+                                    </Form.Group>
+                                </Col>
+                                <Col md={5}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label><strong>Places to Cover</strong></Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            name="placesToCover"
+                                            value={formData.placesToCover}
+                                            onChange={handleInputChange}
+                                            placeholder="e.g., Kanyakumari, Madurai, Kodaikanal, Rameshwaram"
+                                            required
+                                        />
+                                        <Form.Text className="text-muted">
+                                            Comma-separated list of tourist places
+                                        </Form.Text>
+                                    </Form.Group>
+                                </Col>
+                                <Col md={3}>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label><strong>Number of Days</strong></Form.Label>
+                                        <Form.Control
+                                            type="number"
+                                            name="numberOfDays"
+                                            value={formData.numberOfDays}
+                                            onChange={handleInputChange}
+                                            min="1"
+                                            max="15"
+                                            required
+                                        />
+                                        <Form.Text className="text-muted">
+                                            Total tour duration
+                                        </Form.Text>
+                                    </Form.Group>
+                                </Col>
+                            </Row>
 
-              {/* Action Buttons */}
-              <Row className="mb-3">
-                <Col md={6}>
-                  <Button
-                    variant="outline-primary"
-                    onClick={checkFeasibility}
-                    disabled={loading || selectedPlaces.length === 0}
-                    className="w-100"
-                  >
-                    {loading ? <Spinner size="sm" /> : '🔍'} Quick Check
-                  </Button>
+                            <div className="text-center mb-4">
+                                <Button
+                                    variant="success"
+                                    size="lg"
+                                    onClick={generateTourPlans}
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Spinner animation="border" size="sm" className="me-2" />
+                                            Generating Plans...
+                                        </>
+                                    ) : (
+                                        <>
+                                            🧠 Generate AI Tour Plans
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+
+                            {/* Plan Results */}
+                            {planOptions.length > 0 && (
+                                <div>
+                                    <h5 className="mb-3">🎯 AI Generated Tour Plans</h5>
+                                    <Row>
+                                        {planOptions.map((plan, index) => (
+                                            <Col md={4} key={index} className="mb-4">
+                                                <Card className="h-100 border-primary">
+                                                    <Card.Header className="bg-light">
+                                                        <h6 className="mb-0">
+                                                            <Badge bg="primary" className="me-2">Option {index + 1}</Badge>
+                                                            {plan.planName}
+                                                        </h6>
+                                                        <small className="text-muted">{plan.description}</small>
+                                                    </Card.Header>
+                                                    <Card.Body>
+                                                        <div className="mb-3">
+                                                            <strong>🗺️ Detailed Day-wise Itinerary:</strong>
+                                                            <div className="mt-2">
+                                                                {plan.route && plan.route.map((day, dayIndex) => (
+                                                                    <div key={dayIndex} className="mb-3 p-2 border rounded">
+                                                                        <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                            <Badge bg="primary" className="me-2">Day {day.dayNumber}</Badge>
+                                                                            {day.isRestDay && <Badge bg="info">Rest Day</Badge>}
+                                                                            {day.isNightTravel && <Badge bg="warning">Night Travel</Badge>}
+                                                                        </div>
+                                                                        {day.places && day.places.length > 0 ? (
+                                                                            <div>
+                                                                                {day.places.map((place, placeIndex) => (
+                                                                                    <div key={placeIndex} className="mb-2 p-2 bg-light rounded">
+                                                                                        <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                                            <strong className="text-primary">{place.name}</strong>
+                                                                                            <Badge bg="success" className="small">{place.visitDuration}</Badge>
+                                                                                        </div>
+                                                                                        {place.pointsOfInterest && place.pointsOfInterest.length > 0 && (
+                                                                                            <div className="small">
+                                                                                                <strong className="text-muted">Points of Interest:</strong>
+                                                                                                <ul className="list-unstyled mt-1 mb-0">
+                                                                                                    {place.pointsOfInterest.slice(0, 3).map((poi, poiIndex) => (
+                                                                                                        <li key={poiIndex} className="text-muted small">
+                                                                                                            • {poi}
+                                                                                                        </li>
+                                                                                                    ))}
+                                                                                                </ul>
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
+                                                                                ))}
+                                                                                {day.totalKilometers && (
+                                                                                    <div className="small text-info mt-2">
+                                                                                        📍 Total Distance: {day.totalKilometers} km
+                                                                                        {day.isReturnDay && <span className="ms-2">(Return Journey)</span>}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        ) : day.returnJourney ? (
+                                                                            <div className="text-center p-2 bg-warning bg-opacity-25 rounded">
+                                                                                <strong>🏠 {day.returnJourney}</strong>
+                                                                                <div className="small text-muted mt-1">
+                                                                                    Distance: {day.totalKilometers} km
+                                                                                </div>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <small className="text-muted">Rest and relaxation day</small>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="mb-3">
+                                                            <strong>📊 Plan Details:</strong>
+                                                            <ul className="list-unstyled mt-2 small">
+                                                                <li>🚌 Total Distance: {plan.totalDistance} km</li>
+                                                                <li>⏱️ Total Travel Time: {plan.totalTravelTime} hours</li>
+                                                                <li>🏨 Rest Stops: {plan.restStops}</li>
+                                                                <li>🌙 Night Travel: {plan.nightTravelHours} hours</li>
+                                                            </ul>
+                                                        </div>
+
+                                                        <div className="mb-3">
+                                                            <strong>💡 Key Features:</strong>
+                                                            <ul className="list-unstyled mt-2 small">
+                                                                {plan.features && plan.features.map((feature, fIndex) => (
+                                                                    <li key={fIndex}>✓ {feature}</li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    </Card.Body>
+                                                    <Card.Footer>
+                                                        <Button
+                                                            variant="primary"
+                                                            size="sm"
+                                                            onClick={() => usePlanForBooking(plan)}
+                                                            className="w-100"
+                                                        >
+                                                            📝 Use This Plan for Booking
+                                                        </Button>
+                                                    </Card.Footer>
+                                                </Card>
+                                            </Col>
+                                        ))}
+                                    </Row>
+                                </div>
+                            )}
+                        </Card.Body>
+                    </Card>
                 </Col>
-                <Col md={6}>
-                  <Button
-                    variant="success"
-                    onClick={generateTourPlan}
-                    disabled={loading || selectedPlaces.length === 0}
-                    className="w-100"
-                  >
-                    {loading ? (
-                      <>
-                        <Spinner animation="border" size="sm" className="me-2" />
-                        Generating...
-                      </>
-                    ) : (
-                      '🧠 Generate Smart Plan'
-                    )}
-                  </Button>
-                </Col>
-              </Row>
-
-              {/* Navigation */}
-              <Row>
-                <Col>
-                  <Button variant="outline-secondary" onClick={() => navigate('/')}>
-                    🏠 Home
-                  </Button>
-                </Col>
-                <Col className="text-end">
-                  <Button variant="outline-primary" onClick={() => navigate('/booking')}>
-                    📝 Direct Booking
-                  </Button>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {/* Results */}
-        <Col lg={6}>
-          {/* Error Display */}
-          {error && (
-            <Alert variant="danger" className="mb-3">
-              <Alert.Heading>⚠️ Error</Alert.Heading>
-              {error}
-            </Alert>
-          )}
-
-          {/* Success Result */}
-          {result && (
-            <Card className="shadow-sm">
-              <Card.Header className={`text-white ${result.isFeasible ? 'bg-success' : 'bg-warning'}`}>
-                <h5 className="mb-0">
-                  {result.isFeasible ? '✅ Smart Itinerary Generated' : '⚠️ Partially Feasible Plan'}
-                </h5>
-              </Card.Header>
-              <Card.Body>
-                {/* Summary */}
-                <Alert variant={result.isFeasible ? 'success' : 'warning'} className="mb-3">
-                  <Row>
-                    <Col><strong>Trip:</strong> {result.tripName}</Col>
-                    <Col><strong>Days:</strong> {result.totalDays}</Col>
-                  </Row>
-                  <Row>
-                    <Col><strong>Distance:</strong> {result.totalDistanceKm} km</Col>
-                    <Col><strong>Driving:</strong> {result.totalDrivingHours}h</Col>
-                  </Row>
-                  <Row>
-                    <Col><strong>Fuel Cost:</strong> ₹{result.estimatedFuelCost}</Col>
-                    <Col><strong>Return:</strong> {result.summary?.returnTime ? formatTime(result.summary.returnTime) : 'N/A'}</Col>
-                  </Row>
-                </Alert>
-
-                {/* Warnings */}
-                {result.warnings && result.warnings.length > 0 && (
-                  <Alert variant="warning" className="mb-3">
-                    <strong>⚠️ Warnings:</strong>
-                    <ul className="mb-0 mt-1">
-                      {result.warnings.map((warning, index) => (
-                        <li key={index}>{warning}</li>
-                      ))}
-                    </ul>
-                  </Alert>
-                )}
-
-                {/* Excluded Places */}
-                {result.excludedPlaces && result.excludedPlaces.length > 0 && (
-                  <Alert variant="info" className="mb-3">
-                    <strong>ℹ️ Excluded Places:</strong>
-                    <ul className="mb-0 mt-1">
-                      {result.excludedPlaces.map((excluded, index) => (
-                        <li key={index}>{excluded}</li>
-                      ))}
-                    </ul>
-                  </Alert>
-                )}
-
-                {/* Day-wise Itinerary */}
-                <Accordion>
-                  {result.dayItineraries && result.dayItineraries.map((day, index) => (
-                    <Accordion.Item key={index} eventKey={index.toString()}>
-                      <Accordion.Header>
-                        <strong>Day {day.dayNumber}</strong> - {day.summary}
-                      </Accordion.Header>
-                      <Accordion.Body>
-                        <Table striped bordered hover size="sm">
-                          <thead>
-                            <tr>
-                              <th>Time</th>
-                              <th>Activity</th>
-                              <th>Duration</th>
-                              <th>Notes</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {day.stops && day.stops.map((stop, stopIndex) => (
-                              <tr key={stopIndex}>
-                                <td>
-                                  {formatTime(stop.startTime)} - {formatTime(stop.endTime)}
-                                </td>
-                                <td>
-                                  {stop.stopType === 'Travel' ? (
-                                    <span className="text-muted">
-                                      🚗 {stop.fromLocation} → {stop.toLocation}
-                                    </span>
-                                  ) : (
-                                    <span className="text-primary">
-                                      📍 <strong>{stop.placeName}</strong>
-                                    </span>
-                                  )}
-                                </td>
-                                <td>
-                                  {formatDuration(stop.durationMinutes)}
-                                  {stop.distanceKm && (
-                                    <><br /><small>{stop.distanceKm} km</small></>
-                                  )}
-                                </td>
-                                <td>
-                                  <small>{stop.notes}</small>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </Table>
-                      </Accordion.Body>
-                    </Accordion.Item>
-                  ))}
-                </Accordion>
-
-                {/* Use for Booking Button */}
-                <div className="d-grid mt-3">
-                  <Button variant="primary" size="lg" onClick={useForBooking}>
-                    📝 Use This Smart Plan for Booking
-                  </Button>
-                </div>
-              </Card.Body>
-            </Card>
-          )}
-        </Col>
-      </Row>
-
-      {/* Feasibility Check Modal */}
-      <Modal show={showFeasibilityModal} onHide={() => setShowFeasibilityModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>🔍 Feasibility Analysis</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {feasibilityCheck && (
-            <>
-              <Alert variant={feasibilityCheck.isFeasible ? 'success' : 'warning'}>
-                <h5>{feasibilityCheck.isFeasible ? '✅ Tour is Feasible!' : '⚠️ Tour Needs Adjustment'}</h5>
-                <p className="mb-0">{feasibilityCheck.recommendation}</p>
-              </Alert>
-
-              <Table striped>
-                <tbody>
-                  <tr>
-                    <td><strong>Time Utilization</strong></td>
-                    <td>{feasibilityCheck.utilizationPercentage}%</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Total Time Needed</strong></td>
-                    <td>{formatDuration(feasibilityCheck.totalTimeNeeded)}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Available Time</strong></td>
-                    <td>{formatDuration(feasibilityCheck.availableTime)}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Visit Time</strong></td>
-                    <td>{formatDuration(feasibilityCheck.estimatedVisitTime)}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Travel Time</strong></td>
-                    <td>{formatDuration(feasibilityCheck.estimatedTravelTime)}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Valid Places</strong></td>
-                    <td>{feasibilityCheck.validPlaces} / {feasibilityCheck.validPlaces + feasibilityCheck.invalidPlaces}</td>
-                  </tr>
-                </tbody>
-              </Table>
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowFeasibilityModal(false)}>
-            Close
-          </Button>
-          <Button variant="success" onClick={() => { setShowFeasibilityModal(false); generateTourPlan(); }}>
-            Generate Full Plan
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </Container>
-  );
+            </Row>
+        </Container>
+    );
 };
 
 export default SmartTourPlanner;

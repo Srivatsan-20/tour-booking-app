@@ -143,35 +143,7 @@ const NavigationHeader = () => {
               </>
             )}
 
-            {/* Driver Navigation */}
-            {hasRole('driver') && (
-              <>
-                <Nav.Link
-                  onClick={() => navigate('/driver/trips')}
-                  title="My Trips"
-                >
-                  🚛
-                </Nav.Link>
-                <Nav.Link
-                  onClick={() => navigate('/driver/expenses')}
-                  title="Expenses"
-                >
-                  💸
-                </Nav.Link>
-              </>
-            )}
 
-            {/* Admin Driver Access */}
-            {hasRole('admin') && (
-              <NavDropdown title="🚛" id="driver-admin-dropdown">
-                <NavDropdown.Item onClick={() => navigate('/driver')}>
-                  🚛 Driver Dashboard
-                </NavDropdown.Item>
-                <NavDropdown.Item onClick={() => navigate('/driver/trips')}>
-                  📋 All Driver Trips
-                </NavDropdown.Item>
-              </NavDropdown>
-            )}
 
             {/* Customer Navigation */}
             {hasRole('customer') && (
@@ -236,10 +208,35 @@ const NavigationHeader = () => {
               <NavDropdown.Item onClick={() => navigate('/profile')}>
                 👤 Profile
               </NavDropdown.Item>
+
+              {/* Driver Menu Items */}
+              {hasRole('driver') && (
+                <>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item onClick={() => navigate('/driver/trips')}>
+                    🚛 My Trips
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => navigate('/driver/expenses')}>
+                    💸 My Expenses
+                  </NavDropdown.Item>
+                </>
+              )}
+
+              {/* Admin Menu Items */}
               {hasPermission('manage_users') && (
                 <NavDropdown.Item onClick={() => navigate('/admin/users')}>
                   👥 User Management
                 </NavDropdown.Item>
+              )}
+              {hasRole('admin') && (
+                <>
+                  <NavDropdown.Item onClick={() => navigate('/driver')}>
+                    🚛 Driver Dashboard
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => navigate('/driver/trips')}>
+                    📋 All Driver Trips
+                  </NavDropdown.Item>
+                </>
               )}
               {hasRole(['admin', 'manager']) && (
                 <NavDropdown.Item onClick={() => navigate('/admin/settings')}>

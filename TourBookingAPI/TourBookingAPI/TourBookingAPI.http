@@ -1,4 +1,4 @@
-@TourBookingAPI_HostAddress = http://localhost:5050
+@TourBookingAPI_HostAddress = http://localhost:5051
 
 GET {{TourBookingAPI_HostAddress}}/weatherforecast/
 Accept: application/json

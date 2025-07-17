@@ -28,7 +28,7 @@ const AdminUserManagement = () => {
   const fetchUsers = async () => {
     try {
       console.log('🔄 Fetching users from API...');
-      const response = await fetch('http://localhost:5050/api/Users');
+      const response = await fetch('http://localhost:5051/api/Users');
 
       if (response.ok) {
         const usersData = await response.json();
@@ -36,30 +36,7 @@ const AdminUserManagement = () => {
         setUsers(usersData);
       } else {
         console.error('❌ Failed to fetch users:', response.status);
-        // Fallback to mock data if API fails
-        const mockUsers = [
-          {
-            id: 1,
-            username: 'admin',
-            email: 'admin@tourbooking.com',
-            name: 'System Administrator',
-            role: 'admin',
-            status: 'active',
-            lastLogin: '2025-07-10T10:30:00',
-            createdAt: '2025-01-01T00:00:00'
-          },
-          {
-            id: 2,
-            username: 'manager',
-            email: 'manager@tourbooking.com',
-            name: 'Operations Manager',
-            role: 'manager',
-            status: 'active',
-            lastLogin: '2025-07-09T15:45:00',
-            createdAt: '2025-01-15T00:00:00'
-          }
-        ];
-        setUsers(mockUsers);
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
     } catch (err) {
       console.error('❌ Error fetching users:', err);

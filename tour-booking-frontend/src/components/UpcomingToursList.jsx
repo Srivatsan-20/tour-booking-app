@@ -11,7 +11,7 @@ const UpcomingToursList = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const res = await fetch("http://localhost:5050/api/Bookings/Upcoming");
+        const res = await fetch("http://localhost:5051/api/Bookings/Upcoming");
         if (!res.ok) throw new Error("Failed to fetch bookings");
         const data = await res.json();
 

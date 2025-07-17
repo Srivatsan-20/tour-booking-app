@@ -42,7 +42,7 @@ const BusFleetManagement = () => {
 
   const fetchBuses = async () => {
     try {
-      const response = await fetch('http://localhost:5050/api/Bus');
+      const response = await fetch('http://localhost:5051/api/Bus');
       if (!response.ok) throw new Error('Failed to fetch buses');
       const data = await response.json();
       setBuses(data);
@@ -55,7 +55,7 @@ const BusFleetManagement = () => {
 
   const fetchDashboard = async () => {
     try {
-      const response = await fetch('http://localhost:5050/api/Bus/Dashboard');
+      const response = await fetch('http://localhost:5051/api/Bus/Dashboard');
       if (response.ok) {
         const data = await response.json();
         setDashboard(data);
@@ -131,7 +131,7 @@ const BusFleetManagement = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5050/api/Bus/${busId}`, {
+      const response = await fetch(`http://localhost:5051/api/Bus/${busId}`, {
         method: 'DELETE'
       });
 

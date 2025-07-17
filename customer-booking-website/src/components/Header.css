@@ -1,0 +1,258 @@
+/* Header Styles */
+.custom-navbar {
+  background: white !important;
+  padding: 0.5rem 0;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.brand-logo:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo-image {
+  height: 40px;
+  width: auto;
+  margin-right: 10px;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brand-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #007bff;
+}
+
+.brand-tagline {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.nav-item {
+  font-weight: 500;
+  color: #495057;
+  transition: color 0.3s ease;
+  margin: 0 0.5rem;
+}
+
+.nav-item:hover {
+  color: #007bff;
+}
+
+.nav-item i {
+  color: #007bff;
+}
+
+.register-btn {
+  border-radius: 25px;
+  padding: 0.5rem 1.5rem;
+  font-weight: 600;
+  margin-left: 1rem;
+}
+
+.mobile-menu-btn {
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Mobile Navigation */
+.mobile-nav-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid #e9ecef;
+  color: #495057;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.mobile-nav-item:hover {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.mobile-nav-item:last-child {
+  border-bottom: none;
+}
+
+.mobile-contact-info {
+  padding-top: 1rem;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.contact-item a {
+  color: #495057;
+  text-decoration: none;
+}
+
+.contact-item a:hover {
+  color: #007bff;
+}
+
+.mobile-social-links {
+  padding-top: 1rem;
+}
+
+.social-icons {
+  display: flex;
+  gap: 1rem;
+}
+
+.social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f8f9fa;
+  color: #007bff;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+  background-color: #007bff;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Top Info Bar */
+.top-info-bar {
+  background-color: #f8f9fa;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.contact-info .contact-item {
+  color: #6c757d;
+}
+
+.social-links {
+  display: flex;
+  align-items: center;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #e9ecef;
+  color: #6c757d;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.social-link:hover {
+  background-color: #007bff;
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 991px) {
+  .brand-name {
+    font-size: 1.2rem;
+  }
+  
+  .brand-tagline {
+    font-size: 0.7rem;
+  }
+  
+  .logo-image {
+    height: 35px;
+  }
+}
+
+@media (max-width: 576px) {
+  .brand-name {
+    font-size: 1rem;
+  }
+  
+  .brand-tagline {
+    font-size: 0.6rem;
+  }
+  
+  .logo-image {
+    height: 30px;
+    margin-right: 8px;
+  }
+  
+  .top-info-bar {
+    display: none;
+  }
+}
+
+/* Offcanvas customization */
+.offcanvas-header {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.offcanvas-title .brand-name {
+  font-size: 1.3rem;
+}
+
+.offcanvas-title .brand-tagline {
+  font-size: 0.8rem;
+}
+
+/* Animation for navbar */
+.custom-navbar {
+  animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Sticky navbar effect */
+.custom-navbar.scrolled {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Active nav item */
+.nav-item.active {
+  color: #007bff;
+  font-weight: 600;
+}
+
+/* Button hover effects */
+.register-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.mobile-menu-btn:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}

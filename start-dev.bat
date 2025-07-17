@@ -13,8 +13,8 @@ echo.
 echo ✅ Both services are starting...
 echo.
 echo 📱 Frontend: http://localhost:5173
-echo 🔧 Backend API: http://localhost:5050
-echo 📚 API Docs: http://localhost:5050/swagger
+echo 🔧 Backend API: http://localhost:5051
+echo 📚 API Docs: http://localhost:5051/swagger
 echo.
 echo Press any key to close this window...
 pause >nul
