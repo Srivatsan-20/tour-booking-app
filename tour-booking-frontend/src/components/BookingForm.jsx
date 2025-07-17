@@ -5,6 +5,7 @@ import { generateBookingPDF } from "../utils/pdfGenerator";
 import { generateSimpleBookingPDF } from "../utils/simplePdfGenerator";
 import { generateProfessionalBookingPDF } from "../utils/professionalPdfGenerator";
 import { generateContractAgreementPDF } from "../utils/contractAgreementPDF";
+import { buildApiUrl } from "../config/api";
 import Logo from "./Logo";
 
 const BookingForm = () => {
@@ -209,7 +210,7 @@ const BookingForm = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5051/api/Bus/Available?startDate=${startDate}&endDate=${endDate}`
+        buildApiUrl(`/api/Bus/Available?startDate=${startDate}&endDate=${endDate}`)
       );
       if (response.ok) {
         const buses = await response.json();
@@ -280,7 +281,7 @@ const BookingForm = () => {
       // Remove frontend-only fields
       delete submissionData.hasMountainRent;
 
-      const response = await fetch("http://localhost:5051/api/Bookings", {
+      const response = await fetch(buildApiUrl("/api/Bookings"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submissionData),

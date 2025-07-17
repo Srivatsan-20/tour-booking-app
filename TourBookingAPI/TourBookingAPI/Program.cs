@@ -38,6 +38,17 @@ builder.Services.AddScoped<IPublicBookingService, PublicBookingService>();
 builder.Services.AddScoped<IPhotoUploadService, PhotoUploadService>();
 
 
+// Add CORS for Azure deployment
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAzureFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // Seed data (temporarily disabled)
@@ -63,6 +74,9 @@ if (!app.Environment.IsDevelopment())
 app.UseCors("AllowLocalhost");
 
 app.UseAuthorization();
+
+// Enable CORS
+app.UseCors("AllowAzureFrontend");
 
 app.MapControllers();
 
