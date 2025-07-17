@@ -51,12 +51,25 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Seed data (temporarily disabled)
-// using (var scope = app.Services.CreateScope())
-// {
-//     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-//     await SeedData.SeedAsync(context);
-// }
+// Auto-migrate database on startup (for Azure deployment)
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    try
+    {
+        // Ensure database is created and migrations are applied
+        context.Database.Migrate();
+        Console.WriteLine("✅ Database migrations applied successfully");
+
+        // Seed data if needed
+        // await SeedData.SeedAsync(context);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Database migration failed: {ex.Message}");
+        // Don't crash the app, just log the error
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
