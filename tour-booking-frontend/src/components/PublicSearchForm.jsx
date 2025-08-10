@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Row, Col, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaBus } from 'react-icons/fa';
+import { FaSearch, FaMapMarkerAlt, FaCalendarAlt, FaUsers } from 'react-icons/fa';
 
 const PublicSearchForm = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    placesToCover: '',
-    startDate: '',
-    endDate: '',
-    busesRequired: 1
+    from: '',
+    to: '',
+    departureDate: '',
+    passengers: 1
   });
   const [error, setError] = useState('');
 
@@ -26,46 +26,47 @@ const PublicSearchForm = () => {
     e.preventDefault();
 
     // Validation
-    if (!formData.placesToCover || !formData.startDate || !formData.endDate) {
+    if (!formData.from || !formData.to || !formData.departureDate) {
       setError('Please fill in all required fields');
       return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    if (formData.startDate < today) {
-      setError('Start date cannot be in the past');
+    if (formData.from === formData.to) {
+      setError('Departure and destination cities cannot be the same');
       return;
     }
 
-    if (formData.endDate < formData.startDate) {
-      setError('End date cannot be before start date');
+    const today = new Date().toISOString().split('T')[0];
+    if (formData.departureDate < today) {
+      setError('Departure date cannot be in the past');
       return;
     }
 
     // Navigate to search results with query parameters
     const searchParams = new URLSearchParams({
-      places: formData.placesToCover,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      buses: formData.busesRequired
+      from: formData.from,
+      to: formData.to,
+      date: formData.departureDate,
+      passengers: formData.passengers
     });
 
     navigate(`/search-results?${searchParams.toString()}`);
   };
 
-  const popularTours = [
-    'Chennai, Mahabalipuram, Pondicherry',
-    'Bangalore, Mysore, Ooty, Kodaikanal',
-    'Chennai, Tirupati, Tirumala',
-    'Madurai, Rameshwaram, Kanyakumari',
-    'Coimbatore, Ooty, Coonoor',
-    'Chennai, Thanjavur, Trichy, Madurai'
+  const popularRoutes = [
+    { from: 'Chennai', to: 'Bangalore' },
+    { from: 'Chennai', to: 'Coimbatore' },
+    { from: 'Bangalore', to: 'Mysore' },
+    { from: 'Chennai', to: 'Pondicherry' },
+    { from: 'Bangalore', to: 'Ooty' },
+    { from: 'Chennai', to: 'Tirupati' }
   ];
 
-  const handlePopularTourClick = (tour) => {
+  const handlePopularRouteClick = (route) => {
     setFormData(prev => ({
       ...prev,
-      placesToCover: tour
+      from: route.from,
+      to: route.to
     }));
   };
 
@@ -79,56 +80,52 @@ const PublicSearchForm = () => {
 
       <Form onSubmit={handleSubmit}>
         <Row>
-          <Col lg={4} md={6} className="mb-3">
+          <Col lg={3} md={6} className="mb-3">
             <Form.Group>
               <Form.Label className="d-flex align-items-center">
                 <FaMapMarkerAlt className="me-2 text-primary" />
-                Places to Cover *
+                From
               </Form.Label>
               <Form.Control
-                as="textarea"
-                rows={2}
-                name="placesToCover"
-                value={formData.placesToCover}
+                type="text"
+                name="from"
+                value={formData.from}
                 onChange={handleInputChange}
-                placeholder="e.g., Chennai, Mahabalipuram, Pondicherry, Thanjavur"
+                placeholder="Departure city"
                 required
               />
-              <Form.Text className="text-muted">
-                Enter all places you want to visit, separated by commas
-              </Form.Text>
             </Form.Group>
           </Col>
 
-          <Col lg={2} md={3} className="mb-3">
+          <Col lg={3} md={6} className="mb-3">
+            <Form.Group>
+              <Form.Label className="d-flex align-items-center">
+                <FaMapMarkerAlt className="me-2 text-primary" />
+                To
+              </Form.Label>
+              <Form.Control
+                type="text"
+                name="to"
+                value={formData.to}
+                onChange={handleInputChange}
+                placeholder="Destination city"
+                required
+              />
+            </Form.Group>
+          </Col>
+
+          <Col lg={3} md={6} className="mb-3">
             <Form.Group>
               <Form.Label className="d-flex align-items-center">
                 <FaCalendarAlt className="me-2 text-primary" />
-                Start Date *
+                Departure Date
               </Form.Label>
               <Form.Control
                 type="date"
-                name="startDate"
-                value={formData.startDate}
+                name="departureDate"
+                value={formData.departureDate}
                 onChange={handleInputChange}
                 min={new Date().toISOString().split('T')[0]}
-                required
-              />
-            </Form.Group>
-          </Col>
-
-          <Col lg={2} md={3} className="mb-3">
-            <Form.Group>
-              <Form.Label className="d-flex align-items-center">
-                <FaCalendarAlt className="me-2 text-primary" />
-                End Date *
-              </Form.Label>
-              <Form.Control
-                type="date"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleInputChange}
-                min={formData.startDate || new Date().toISOString().split('T')[0]}
                 required
               />
             </Form.Group>
@@ -137,45 +134,44 @@ const PublicSearchForm = () => {
           <Col lg={2} md={4} className="mb-3">
             <Form.Group>
               <Form.Label className="d-flex align-items-center">
-                <FaBus className="me-2 text-primary" />
-                Buses Required *
+                <FaUsers className="me-2 text-primary" />
+                Passengers
               </Form.Label>
               <Form.Select
-                name="busesRequired"
-                value={formData.busesRequired}
+                name="passengers"
+                value={formData.passengers}
                 onChange={handleInputChange}
               >
-                {[...Array(10)].map((_, i) => (
+                {[...Array(50)].map((_, i) => (
                   <option key={i + 1} value={i + 1}>
-                    {i + 1} {i === 0 ? 'Bus' : 'Buses'}
+                    {i + 1} {i === 0 ? 'Passenger' : 'Passengers'}
                   </option>
                 ))}
               </Form.Select>
             </Form.Group>
           </Col>
 
-          <Col lg={2} md={2} className="mb-3 d-flex align-items-end">
+          <Col lg={1} md={2} className="mb-3 d-flex align-items-end">
             <Button type="submit" variant="primary" className="w-100">
-              <FaSearch className="me-1" />
-              Search
+              <FaSearch />
             </Button>
           </Col>
         </Row>
       </Form>
 
-      {/* Popular Tours */}
+      {/* Popular Routes */}
       <div className="mt-4">
-        <h6 className="text-muted mb-3">Popular Tour Packages:</h6>
+        <h6 className="text-muted mb-3">Popular Routes:</h6>
         <div className="d-flex flex-wrap gap-2">
-          {popularTours.map((tour, index) => (
+          {popularRoutes.map((route, index) => (
             <Button
               key={index}
               variant="outline-primary"
               size="sm"
-              onClick={() => handlePopularTourClick(tour)}
+              onClick={() => handlePopularRouteClick(route)}
               className="rounded-pill"
             >
-              {tour}
+              {route.from} → {route.to}
             </Button>
           ))}
         </div>

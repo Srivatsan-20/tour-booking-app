@@ -47,11 +47,11 @@ const SearchResults: React.FC = () => {
     try {
       // Call real API for bus search
       const searchRequest = {
-        pickupLocation: searchParams.from || "Any",
-        destination: searchParams.to || "Any",
-        departureDate: searchParams.departureDate,
-        returnDate: searchParams.returnDate,
-        passengerCount: parseInt(searchParams.passengers) || 1
+        pickupLocation: data.pickupLocation || "Any",
+        destination: data.destination || "Any",
+        departureDate: data.departureDate,
+        returnDate: data.returnDate,
+        passengerCount: data.passengerCount || 1
       };
 
       console.log('🔍 Customer website searching with:', searchRequest);
